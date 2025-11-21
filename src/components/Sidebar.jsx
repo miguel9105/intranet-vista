@@ -1,7 +1,4 @@
-// src/components/Sidebar.jsx
-
 import React from 'react';
-// CAMBIO CLAVE: Importar useNavigate
 import { Link, useLocation, useNavigate } from 'react-router-dom'; 
 import { useAuth } from '../context/AuthContext';
 import { 
@@ -10,7 +7,7 @@ import {
     ArrowLeftEndOnRectangleIcon, ChartBarIcon 
 } from '@heroicons/react/24/outline'; 
 
-// Definición de roles (Ajusta estos valores si tu API usa nombres diferentes)
+// Definición de roles
 const R_ADMIN = 'Administrador';
 const R_GESTOR = 'Gestor';
 const R_ADMINISTRATIVO = 'Administrativo';
@@ -20,6 +17,7 @@ const R_ASESOR = 'Asesor';
 // Helper de roles
 const hasAnyRole = (user, rolesRequired) => {
     if (!user || !user.roles) return false; 
+    // Mapeamos los roles, ya que podrían venir como objetos {id: 1, name: '...'} o solo strings
     const userRoles = user.roles.map(r => r.name || r); 
     const required = Array.isArray(rolesRequired) ? rolesRequired : [rolesRequired];
     return userRoles.some(role => required.includes(role));
@@ -32,62 +30,71 @@ const NavItem = ({ to, children, icon: Icon }) => {
     return (
         <Link 
             to={to} 
-            className={`flex items-center p-3 my-2 transition-colors duration-200 rounded-lg group ${isActive ? 'bg-indigo-600 text-white shadow-md' : 'text-indigo-200 hover:bg-indigo-600 hover:text-white'}`}
+            className={`flex items-center p-3 transition-colors duration-200 rounded-lg group ${
+                isActive 
+                    ? 'bg-indigo-700 text-white shadow-lg' 
+                    : 'text-indigo-200 hover:bg-indigo-600'
+            }`}
         >
-            <Icon className={`w-6 h-6 mr-3 transition-colors duration-200 ${isActive ? 'text-white' : 'text-indigo-400 group-hover:text-white'}`} />
-            <span className="font-semibold text-sm">{children}</span>
+            <Icon className="w-6 h-6 mr-3" />
+            <span className="font-medium">{children}</span>
         </Link>
     );
 };
 
 export default function Sidebar() {
     const { user, logout } = useAuth();
-    // CAMBIO CLAVE: Llamada a useNavigate en el componente
-    const navigate = useNavigate(); 
+    const navigate = useNavigate();
 
-    // Función que maneja el logout y la redirección
     const handleLogout = () => {
-        // Llama a logout y pasa el navigate como callback de éxito
         logout(() => {
             navigate('/login');
         });
     };
 
     return (
-        <aside className="h-full bg-violet-900 flex flex-col p-4 shadow-xl">
-            <div className="flex-shrink-0 text-white text-2xl font-black mb-6">
-                <span className="tracking-widest border-l-4 border-red-600 pl-3">INTRANET</span>
+        <aside className="fixed top-0 left-0 h-screen w-64 bg-indigo-800 text-white flex flex-col p-4 shadow-2xl z-20">
+            <div className="flex-shrink-0 mb-8">
+                <h1 className="text-2xl font-extrabold tracking-wider uppercase text-yellow-300">
+                    FinanSueños
+                </h1>
             </div>
 
             <nav className="flex-grow space-y-2 overflow-y-auto">
-                {/* ... (Contenido de navegación) ... */}
+                {/* General */}
                 <div className="text-xs font-bold uppercase text-indigo-300 pt-4 pb-1">General</div>
                 <NavItem to="/dashboard" icon={HomeIcon}>Dashboard</NavItem>
-                
+
+                {/* Sección de Administración */}
                 {hasAnyRole(user, [R_ADMIN]) && (
                     <>
                         <div className="text-xs font-bold uppercase text-indigo-300 pt-4 pb-1">Administración</div>
                         <NavItem to="/users" icon={UsersIcon}>Usuarios</NavItem>
-                        <NavItem to="/roles" icon={ClipboardIcon}>Roles & Permisos</NavItem>
+                        <NavItem to="/roles" icon={ClipboardIcon}>Roles y Permisos</NavItem>
                         <NavItem to="/companies" icon={BriefcaseIcon}>Empresas</NavItem>
                     </>
                 )}
 
-                {hasAnyRole(user, [R_ADMIN, R_GESTOR]) && (
-                    <>
-                        <div className="text-xs font-bold uppercase text-indigo-300 pt-4 pb-1">Gestión</div>
-                        <NavItem to="/reports" icon={ChartBarIcon}>Reportes</NavItem>
-                    </>
-                )}
-                
+                {/* Sección de Gestión y Operaciones */}
                 {hasAnyRole(user, [R_ADMIN, R_GESTOR, R_ADMINISTRATIVO, R_ASESOR]) && (
                     <>
+                        <div className="text-xs font-bold uppercase text-indigo-300 pt-4 pb-1">Gestión</div>
+                        
+                        {/* El procesamiento de DataCrédito solo para Administradores (por seguridad de la API) */}
+                        {hasAnyRole(user, [R_ADMIN]) && (
+                            // 👈 NUEVO ITEM DE SIDEBAR
+                            <NavItem to="/reportes/datacredito" icon={ChartBarIcon}>
+                                Procesar DataCrédito
+                            </NavItem>
+                        )}
+
                         <div className="text-xs font-bold uppercase text-indigo-300 pt-4 pb-1">Operaciones</div>
                         <NavItem to="/inventario" icon={ArchiveBoxIcon}>Inventario</NavItem>
                         <NavItem to="/documentos" icon={DocumentTextIcon}>Documentos</NavItem>
                     </>
                 )}
                 
+                {/* Soporte */}
                 <div className="text-xs font-bold uppercase text-indigo-300 pt-4 pb-1">Soporte</div>
                 <NavItem to="/ayuda" icon={LifebuoyIcon}>Mesa de Ayuda</NavItem>
 
@@ -99,12 +106,11 @@ export default function Sidebar() {
                 </div>
                 
                 <button
-                    // CAMBIO CLAVE: Llama a handleLogout
                     onClick={handleLogout}
                     className="w-full flex items-center p-3 text-red-300 transition-colors duration-200 rounded-lg hover:bg-red-700 hover:text-white group"
                 >
                     <ArrowLeftEndOnRectangleIcon className="w-6 h-6 mr-3" />
-                    <span className="font-semibold text-sm">Cerrar Sesión</span>
+                    <span className="font-medium">Cerrar Sesión</span>
                 </button>
             </div>
         </aside>

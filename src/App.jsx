@@ -7,13 +7,15 @@ import ProtectedRoute from './components/ProtectedRoute';
 import LoginPage from './pages/LoginPage';
 import Dashboard from './pages/Dashboard';
 import Home from './pages/Home';
-import Users from './pages/Users';         // <--- NUEVO
-import Roles from './pages/Roles';         // <--- NUEVO
-import Companies from './pages/Companies'; // <--- NUEVO
-import Inventory from './pages/Inventory'; // <--- NUEVO
-import Documents from './pages/Documents'; // <--- NUEVO
-import Reports from './pages/Reports';     // <--- NUEVO
-import Help from './pages/Help';           // <--- NUEVO
+import Users from './pages/Users';         // <--- EXISTENTE
+import Roles from './pages/Roles';         // <--- EXISTENTE
+import Companies from './pages/Companies'; // <--- EXISTENTE
+import Inventory from './pages/Inventory'; // <--- EXISTENTE
+import Documents from './pages/Documents'; // <--- EXISTENTE
+import Help from './pages/Help';           // <--- EXISTENTE
+
+// 👈 NUEVA IMPORTACIÓN
+import DatacreditoProcessingPage from './pages/DatacreditoProcessingPage'; 
 
 function App() {
   return (
@@ -24,7 +26,7 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<LoginPage />} />
 
-          {/* Rutas Protegidas */}
+          {/* Rutas Protegidas (Requieren autenticación) */}
           <Route element={<ProtectedRoute />}>
               <Route path="/dashboard" element={<Dashboard />} />
               
@@ -34,10 +36,13 @@ function App() {
               <Route path="/companies" element={<Companies />} />
 
               {/* Rutas de Gestión y Operaciones */}
-              <Route path="/reports" element={<Reports />} />
+             
               <Route path="/inventario" element={<Inventory />} />
               <Route path="/documentos" element={<Documents />} />
               
+              {/* 👈 NUEVA RUTA: Procesamiento de Reporte Datacredito */}
+              <Route path="/reportes/datacredito" element={<DatacreditoProcessingPage />} />
+
               {/* Soporte */}
               <Route path="/ayuda" element={<Help />} />
           </Route>
