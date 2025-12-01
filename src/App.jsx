@@ -7,16 +7,17 @@ import ProtectedRoute from './components/ProtectedRoute';
 import LoginPage from './pages/LoginPage';
 import Dashboard from './pages/Dashboard';
 import Home from './pages/Home';
-import Users from './pages/Users';         // <--- EXISTENTE
-import Roles from './pages/Roles';         // <--- EXISTENTE
-import Companies from './pages/Companies'; // <--- EXISTENTE
-import Inventory from './pages/Inventory'; // <--- EXISTENTE
+import Users from './pages/Users';         
+import Roles from './pages/Roles';         
+import Companies from './pages/Companies'; 
+import Inventory from './pages/Inventory'; 
 import Documents from './pages/Documents';
 import Positions from './pages/Positions'; 
-import Regionals from './pages/Regionals'; // <--- EXISTENTE
-import Help from './pages/Help';           // <--- EXISTENTE
-
-// 👈 NUEVA IMPORTACIÓN
+import Regionals from './pages/Regionals'; 
+import Help from './pages/Help';   
+import ObjectivesView from './pages/ObjectivesView';
+import EventsView from './pages/EventsView';
+import NewsView from './pages/NewsView';        
 import DatacreditoProcessingPage from './pages/DatacreditoProcessingPage'; 
 
 function App() {
@@ -44,8 +45,12 @@ function App() {
               <Route path="/inventario" element={<Inventory />} />
               <Route path="/documentos" element={<Documents />} />
               
-              {/* 👈 NUEVA RUTA: Procesamiento de Reporte Datacredito */}
+              {/*  NUEVA RUTA: Procesamiento de Reporte Datacredito */}
               <Route path="/reportes/datacredito" element={<DatacreditoProcessingPage />} />
+              
+              <Route path="/objectives" element={<ObjectivesView />} />
+              <Route path="/events" element={<EventsView />} />
+              <Route path="/news" element={<NewsView />} />
 
               {/* Soporte */}
               <Route path="/ayuda" element={<Help />} />

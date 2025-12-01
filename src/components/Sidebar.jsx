@@ -6,7 +6,8 @@ import {
     ArchiveBoxIcon, DocumentTextIcon, LifebuoyIcon, 
     ArrowLeftEndOnRectangleIcon, ChartBarIcon, 
     MapPinIcon, Cog6ToothIcon, UserCircleIcon, 
-    ChevronDownIcon, ChevronRightIcon // Iconos para el despliegue
+    ChevronDownIcon, ChevronRightIcon, // Iconos para el despliegue
+    PencilSquareIcon // <-- NUEVO: Icono para la sección "Publicar"
 } from '@heroicons/react/24/outline';
 
 // Define el color oscuro personalizado (para hover y texto)
@@ -31,6 +32,7 @@ const hasAnyRole = (user, rolesRequired) => {
 // Componente para los sub-ítems (elementos finales, dentro de los acordeones)
 const SubNavItem = ({ to, children }) => {
     const location = useLocation();
+    // Usa .startsWith para activar la clase si la ruta coincide con el inicio (útil para rutas anidadas)
     const isActive = location.pathname.startsWith(to);
     
     // El hover de los sub-ítems se mantiene sutil (bg-gray-100) para no competir con los principales
@@ -57,7 +59,7 @@ const NavItem = ({ to, children, icon: Icon, isCollapsed, subItems = [] }) => {
     // Lógica para determinar si es un acordeón
     const isAccordion = subItems.length > 0;
     
-    // Mantenemos el estado local solo para los acordeones
+    // Si es un acordeón, la apertura inicial se basa en si alguna sub-ruta está activa
     const initialOpen = isAccordion && subItems.some(item => location.pathname.startsWith(item.to));
     const [isOpen, setIsOpen] = useState(initialOpen); // Estado para el acordeón (despliegue hacia abajo)
 
@@ -68,6 +70,7 @@ const NavItem = ({ to, children, icon: Icon, isCollapsed, subItems = [] }) => {
     
     // Colores para el estado activo
     const textColor = itemIsActive ? 'white' : DARK_COLOR;
+    // Usa DARK_COLOR para el fondo activo
     const backgroundColor = itemIsActive ? DARK_COLOR : 'transparent';
 
     const handleClick = () => {
@@ -88,7 +91,7 @@ const NavItem = ({ to, children, icon: Icon, isCollapsed, subItems = [] }) => {
     const elementId = `nav-item-${children.replace(/\s/g, '-')}`;
 
     return (
-        <div className="relative">
+        <div className="relative group"> {/* Añadir 'group' aquí para el despliegue lateral */}
             {/* El div actúa como contenedor para aplicar el hover correcto en modo colapsado */}
             <div className={`rounded-lg transition-colors duration-300 ${elementId}`}>
                 <Component 
@@ -153,11 +156,13 @@ const NavItem = ({ to, children, icon: Icon, isCollapsed, subItems = [] }) => {
                     className={`absolute left-full top-0 ml-2 w-56 p-2 bg-white rounded-xl shadow-2xl border border-gray-100 transition-opacity duration-300 origin-left z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible`}
                 >
                     <div className='p-1 font-bold text-gray-700' style={{ color: DARK_COLOR }}>{children}</div>
-                    {subItems.map((item, index) => (
-                        <SubNavItem key={index} to={item.to}>
-                            {item.label}
-                        </SubNavItem>
-                    ))}
+                    <div className="space-y-1">
+                        {subItems.map((item, index) => (
+                            <SubNavItem key={index} to={item.to}>
+                                {item.label}
+                            </SubNavItem>
+                        ))}
+                    </div>
                 </div>
             )}
         </div>
@@ -187,6 +192,15 @@ export default function Sidebar() {
         { label: 'Empresas Asociadas', to: '/companies' },
         { label: 'Puestos de Trabajo', to: '/positions' },
         { label: 'Regionalización', to: '/regionals' },
+    ] : [];
+    
+    // **********************************************
+    // NUEVO: Opciones de Publicación (por rol)
+    // **********************************************
+    const publishSubItems = hasAnyRole(user, [R_ADMIN, R_GESTOR]) ? [
+        { label: 'Objetivos', to: '/objectives' },
+        { label: 'Eventos', to: '/events' },
+        { label: 'Noticias', to: '/news' },
     ] : [];
 
     // Opciones de Operaciones (filtradas por rol)
@@ -247,6 +261,18 @@ export default function Sidebar() {
                 <NavItem to="/dashboard" icon={HomeIcon} isCollapsed={isCollapsed}>
                     Dashboard
                 </NavItem>
+                
+                {/* Ítem: Publicar (NUEVO ACORDEÓN) */}
+                {publishSubItems.length > 0 && (
+                     <NavItem 
+                        to="/publicar" // Usar una ruta base para activar la lógica de acordeón/ruta
+                        icon={PencilSquareIcon} 
+                        isCollapsed={isCollapsed}
+                        subItems={publishSubItems}
+                    >
+                        Publicar
+                    </NavItem>
+                )}
                 
                 {/* Ítem: Operaciones (Acordeón/Dropdown) */}
                 {operationalSubItems.length > 0 && (

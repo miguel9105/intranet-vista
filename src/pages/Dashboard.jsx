@@ -1,354 +1,410 @@
+// src/components/Dashboard.jsx
 import React, { useState, useEffect } from 'react';
 import AuthenticatedLayout from '../layouts/AuthenticatedLayout';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/AuthContext'; 
 import { 
-    UsersIcon, DocumentTextIcon, CubeIcon, ChartBarIcon, 
-    BriefcaseIcon, TrophyIcon, MegaphoneIcon, CakeIcon, 
-    CalendarIcon, CurrencyDollarIcon, PlayIcon, SparklesIcon
-} from '@heroicons/react/24/outline';
-import { motion } from 'framer-motion';
+    UsersIcon, BriefcaseIcon, TrophyIcon, MegaphoneIcon, CakeIcon, 
+    CalendarIcon, SparklesIcon, ChevronLeftIcon, ChevronRightIcon
+} from '@heroicons/react/24/outline'; 
+import { motion } from 'framer-motion'; 
 
-// -------------------------------------------------------------------------------------
-// --- Lógica de Carga de Datos (Simulada) ---
-const fetchData = async () => {
-    await new Promise(resolve => setTimeout(resolve, 500)); 
-    return {
-        stats: {
-            users: "1,245",
-            inventoryCount: "256",
-            inventoryValue: "$85,000", 
-            documents: "89",
-            salesToday: "$5,120",
-        },
-        news: [
-            { id: 1, headline: "¡Nuevo Cliente Mayor!", summary: "Hemos cerrado un acuerdo estratégico con 'Global Corp' para los próximos 3 años.", date: "15 Nov 2025" },
-            { id: 2, headline: "Capacitación en React", summary: "Próxima sesión de entrenamiento en React y Tailwind CSS el 2 de Diciembre.", date: "20 Nov 2025" },
-        ],
-        birthdays: [
-            { name: "Ana P. (Ventas)", date: "28 Nov" },
-            { name: "Juan M. (IT)", date: "3 Dic" },
-        ],
-        events: [
-            { title: "Reunión General de Fin de Mes", date: "29 Nov", time: "10:00 AM" },
-            { title: "Almuerzo de Equipo", date: "6 Dic", time: "1:00 PM" },
-        ],
-        infoImages: [
-            { id: 1, src: 'https://via.placeholder.com/300x150/06b6d4/ffffff?text=Proyecto+X', alt: 'Cronograma del Proyecto', caption: 'Revisa el nuevo cronograma del proyecto X.' },
-            { id: 2, src: 'https://via.placeholder.com/300x150/10b981/ffffff?text=Políticas+RRHH', alt: 'Políticas de RRHH', caption: 'Actualización de políticas internas. ¡Léelas!' },
-            { id: 3, src: 'https://via.placeholder.com/300x150/6366f1/ffffff?text=Ventas+Q4', alt: 'Resultados de Ventas', caption: 'Ventas del Q4: ¡Hemos superado las expectativas!' },
-            { id: 4, src: 'https://via.placeholder.com/300x150/f59e0b/ffffff?text=Próxima+Meta', alt: 'Próxima Meta', caption: 'Nuevo objetivo de expansión de mercado para Enero.' },
-            { id: 5, src: 'https://via.placeholder.com/300x150/ef4444/ffffff?text=TIPS+de+Productividad', alt: 'Tips de Productividad', caption: '5 claves para una semana laboral más eficiente.' },
-        ]
+/**
+ * Función para obtener la URL base del servidor Laravel.
+ * Si el baseURL de Axios es 'http://api.intranet.test/api', esta función devuelve 'http://api.intranet.test'.
+ * Esto es necesario para acceder a la carpeta /storage.
+ */
+const getBaseUrl = (apiClient) => apiClient.defaults.baseURL ? apiClient.defaults.baseURL.replace('/api', '') : 'http://localhost:8000';
+
+// =======================================================================
+// --- COMPONENTE CARRUSEL DE NOTICIAS CON GESTIÓN DE IMAGEN Y CONTRASTE ---
+// =======================================================================
+
+const NewsCarousel = ({ newsList = [], IMAGE_BASE_URL }) => {
+    const [currentIndex, setCurrentIndex] = useState(0);
+
+    const nextSlide = () => {
+        setCurrentIndex((prevIndex) => (prevIndex === newsList.length - 1 ? 0 : prevIndex + 1));
     };
-};
 
-// -------------------------------------------------------------------------------------
-// --- Componentes Auxiliares (Estilo Minimalista) ---
+    const prevSlide = () => {
+        setCurrentIndex((prevIndex) => (prevIndex === 0 ? newsList.length - 1 : prevIndex - 1));
+    };
 
-const VideoHero = () => (
-    <motion.div 
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.1 }}
-        className="relative bg-white rounded-xl overflow-hidden shadow-md h-64 md:h-96 w-full group cursor-pointer border border-gray-100"
-    >
-        <div className="absolute inset-0 bg-gray-100 rounded-xl overflow-hidden">
-           <video
-                autoPlay loop muted playsInline 
-                className="w-full h-full object-cover opacity-80"
-            >
-                <source src="/videos/intranet-bg.mp4" type="video/mp4" />
-                Tu navegador no soporta la etiqueta de video.
-            </video>
-            <div className="absolute inset-0 bg-black/10 flex items-center justify-center">
-                <motion.div
-                    initial={{ scale: 0.8 }}
-                    animate={{ scale: 1 }}
-                    transition={{ type: "spring", stiffness: 200, damping: 15 }}
-                    className="p-5 rounded-full bg-white/70 backdrop-blur-sm text-indigo-600 group-hover:bg-indigo-500 group-hover:text-white transition-all duration-300 transform"
-                >
-                    <PlayIcon className="w-10 h-10" />
-                </motion.div>
+    // Auto-avance del carrusel cada 5 segundos
+    useEffect(() => {
+        if (newsList.length > 1) {
+            const interval = setInterval(nextSlide, 5000);
+            return () => clearInterval(interval);
+        }
+    }, [newsList.length]);
+
+    if (newsList.length === 0) {
+        return (
+            <div className="bg-white p-6 rounded-xl shadow-lg border-l-4 border-emerald-600 text-center text-gray-500 italic h-[450px] flex items-center justify-center">
+                <p>No hay noticias publicadas para el carrusel.</p>
             </div>
-            <p className="absolute bottom-4 left-6 text-gray-500 text-sm font-light italic">Mensaje de bienvenida y visión.</p>
-        </div>
-    </motion.div>
-);
+        );
+    }
+    
+    /**
+     * ✅ SOLUCIÓN DE IMAGEN: Transforma la ruta interna de Laravel ('public/news_images/...')
+     * a la URL pública accesible por el navegador. Usamos la ruta RELATIVA ('/storage/...')
+     * para asegurar el correcto funcionamiento, especialmente en entornos de desarrollo.
+     */
+    const getImageUrl = (path) => {
+        if (!path) return '/placeholder.jpg'; // Imagen por defecto si no hay ruta
+        
+        // Reemplaza 'public/' por 'storage/'
+        const normalizedPath = path.startsWith('public/') ? path.replace('public/', 'storage/') : path;
+        
+        // Retorna la ruta relativa: /storage/news_images/archivo.jpg
+        return `${IMAGE_BASE_URL}/${normalizedPath}`;
+    }
 
-const UserRoleSection = ({ role, company }) => (
-    <motion.div 
-        whileHover={{ y: -2, boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.06)" }}
-        transition={{ type: "spring", stiffness: 300 }}
-        className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 cursor-pointer" 
-    >
-        <div className="flex items-center space-x-3 text-cyan-600 mb-4 border-b border-gray-100 pb-2">
-            <BriefcaseIcon className="w-6 h-6" />
-            <h2 className="text-xl font-semibold text-gray-800">Mi Puesto</h2>
-        </div>
-        <div className="space-y-3 pt-2">
-            <div className="p-3 bg-cyan-50 rounded-lg">
-                <p className="text-gray-700">
-                    <span className="font-semibold text-cyan-700">Puesto:</span> {role || "No asignado"}
-                </p>
-                <p className="text-gray-700 mt-1">
-                    <span className="font-semibold text-cyan-700">Empresa:</span> {company || "N/A"}
-                </p>
-            </div>
-        </div>
-    </motion.div>
-);
 
-const NewsCarousel = ({ news }) => {
     return (
         <motion.div 
-            whileHover={{ y: -2, boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.06)" }}
-            transition={{ type: "spring", stiffness: 300 }}
-            className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 overflow-hidden cursor-pointer" 
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.5, type: "spring", stiffness: 300 }}
+            className="relative w-full overflow-hidden rounded-xl shadow-xl border border-gray-200 h-[450px]"
         >
-            <div className="flex items-center space-x-3 text-red-600 mb-4 border-b border-gray-100 pb-2">
-                <MegaphoneIcon className="w-6 h-6" />
-                <h2 className="text-xl font-semibold text-gray-800">Noticias</h2>
-            </div>
-            <div className="space-y-4 pt-2">
-                {news.slice(0, 2).map((item) => (
-                    <div key={item.id} className="p-3 bg-white rounded-lg border-l-4 border-red-300 hover:bg-red-50 transition-colors">
-                        <h4 className="font-bold text-gray-800">{item.headline}</h4>
-                        <p className="text-sm text-gray-600 mt-1 line-clamp-2">{item.summary}</p>
-                        <span className="text-xs text-gray-400 mt-2 block">{item.date}</span>
+            <div 
+                className="flex transition-transform duration-500 ease-in-out h-full"
+                style={{ transform: `translateX(-${currentIndex * 100}%)` }}
+            >
+                {newsList.map((news, index) => (
+                    <div 
+                        key={news.id || index} 
+                        className="w-full flex-shrink-0 relative h-full"
+                        style={{ 
+                            // Uso de la URL generada para el fondo
+                            backgroundImage: `url(${getImageUrl(news.image_path)})`,
+                            backgroundSize: 'cover',
+                            backgroundPosition: 'center',
+                        }}
+                    >
+                        {/* ✅ MEJORA DE CONTRASTE: Overlay más ligero (bg-opacity-20) para 
+                            que la imagen se vea más, y un gradiente fuerte en la parte inferior 
+                            para asegurar la legibilidad del texto blanco. 
+                        */}
+                        <div className="absolute inset-0 bg-black bg-opacity-20 flex items-end">
+                            <div className="p-6 w-full bg-gradient-to-t from-black/80 to-transparent">
+                                {/* Título de la noticia (Campo: title) */}
+                                <h3 className="text-3xl font-bold text-white mb-2 leading-snug">{news.title}</h3>
+                                
+                                {/* Descripción de la noticia (Campo: description) */}
+                                <p className="text-sm text-gray-200 line-clamp-2">{news.description}</p>
+                                
+                                {/* Fecha de publicación (Campo: published_at) */}
+                                <p className="text-xs text-yellow-300 mt-2">Publicado: {new Date(news.published_at).toLocaleDateString('es-CO')}</p>
+                            </div>
+                        </div>
                     </div>
                 ))}
             </div>
-            <p className="text-right text-sm text-red-600 mt-4 cursor-pointer hover:text-red-800 font-medium">Ver todas &rarr;</p>
-        </motion.div>
-    );
-};
 
-const StatCard = ({ title, value, icon: Icon, colorClass }) => (
-    <motion.div 
-        whileHover={{ y: -4 }}
-        transition={{ type: "spring", stiffness: 400, damping: 15 }}
-        className="bg-white p-5 rounded-lg shadow-sm border border-gray-200 transform cursor-pointer"
-    >
-        <div className="flex items-center justify-between">
-            <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wider">{title}</h3>
-            <Icon className={`w-6 h-6 ${colorClass}`} />
-        </div>
-        <p className="mt-1 text-3xl font-bold text-gray-900">{value}</p>
-    </motion.div>
-);
+            {/* Botones de Navegación */}
+            {newsList.length > 1 && (
+                <>
+                    <button 
+                        onClick={prevSlide} 
+                        className="absolute top-1/2 left-4 transform -translate-y-1/2 bg-black/50 hover:bg-black/70 p-3 rounded-full text-white transition-colors z-10"
+                    >
+                        <ChevronLeftIcon className="w-6 h-6" />
+                    </button>
+                    <button 
+                        onClick={nextSlide} 
+                        className="absolute top-1/2 right-4 transform -translate-y-1/2 bg-black/50 hover:bg-black/70 p-3 rounded-full text-white transition-colors z-10"
+                    >
+                        <ChevronRightIcon className="w-6 h-6" />
+                    </button>
+                </>
+            )}
 
-const ImageCarousel = ({ images }) => {
-    const [currentIndex, setCurrentIndex] = useState(0);
-
-    useEffect(() => {
-        const interval = setInterval(() => {
-            setCurrentIndex((prevIndex) => (prevIndex + 1));
-        }, 5000); 
-        return () => clearInterval(interval);
-    }, []);
-
-    const itemWidth = 33.33; 
-    const transformX = -(currentIndex * itemWidth);
-    const carouselImages = [...images, ...images]; 
-
-    return (
-        <motion.div 
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 overflow-hidden cursor-pointer"
-        >
-            <div className="flex items-center space-x-3 text-indigo-600 mb-4 border-b border-gray-100 pb-2">
-                <ChartBarIcon className="w-6 h-6" /> 
-                <h2 className="text-xl font-semibold text-gray-800">Información Visual</h2>
-            </div>
-            
-            <div className="flex overflow-hidden relative">
-                <motion.div
-                    animate={{ x: `${transformX}%` }}
-                    transition={{ type: 'tween', duration: 0.8 }} 
-                    onAnimationComplete={() => {
-                        if (currentIndex >= images.length) {
-                            setCurrentIndex(0); 
-                        }
-                    }}
-                    className="flex space-x-6 pb-2"
-                    style={{ width: `${carouselImages.length * itemWidth}%` }}
-                >
-                    {carouselImages.map((image, index) => (
-                        <div 
-                            key={index}
-                            style={{ flexShrink: 0, width: `${itemWidth}%` }}
-                            className="border border-gray-200 rounded-lg overflow-hidden bg-gray-50 hover:shadow-md transition-shadow"
-                        >
-                            <img src={image.src} alt={image.alt} className="w-full h-28 object-cover" />
-                            <div className="p-3">
-                                <p className="text-sm font-medium text-gray-700 line-clamp-2">{image.caption}</p>
-                            </div>
-                        </div>
-                    ))} 
-                </motion.div>
+            {/* Indicadores de diapositiva */}
+            <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2">
+                {newsList.map((_, index) => (
+                    <button
+                        key={index}
+                        onClick={() => setCurrentIndex(index)}
+                        className={`w-3 h-3 rounded-full transition-colors ${index === currentIndex ? 'bg-white' : 'bg-white/50 hover:bg-white/80'}`}
+                    />
+                ))}
             </div>
         </motion.div>
     );
 };
 
-const BirthdayCalendar = ({ birthdays }) => (
+
+// =======================================================================
+// --- OTROS COMPONENTES DE RESUMEN ---
+// =======================================================================
+
+// Componente para mostrar los últimos Objetivos
+const RecentObjectivesCard = ({ objectivesList = [] }) => (
     <motion.div 
-        whileHover={{ y: -2, boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.06)" }}
-        transition={{ type: "spring", stiffness: 300 }}
-        className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 cursor-pointer" 
+        initial={{ opacity: 0, y: 50 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2, type: "spring", stiffness: 300 }}
+        className="bg-white p-6 rounded-xl shadow-md border border-gray-200 hover:shadow-lg transition-shadow"
     >
-        <div className="flex items-center space-x-3 text-pink-600 mb-4 border-b border-gray-100 pb-2">
-            <CakeIcon className="w-6 h-6" />
-            <h2 className="text-xl font-semibold text-gray-800">Cumpleaños</h2>
+        <div className="flex items-center space-x-3 text-indigo-600 mb-4 border-b border-gray-100 pb-2">
+            <TrophyIcon className="w-6 h-6" />
+            <h2 className="text-xl font-semibold text-gray-800">Objetivos Pendientes</h2>
         </div>
-        <ul className="space-y-2 pt-2">
-            {birthdays.map((person, index) => (
-                <li key={index} className="flex justify-between items-center text-gray-700 p-2 bg-pink-50 rounded-md hover:bg-pink-100 transition-colors">
-                    <span className="flex items-center"><SparklesIcon className="w-4 h-4 mr-2 text-pink-500"/>{person.name}</span>
-                    <span className="font-medium text-pink-600 text-sm">{person.date}</span>
-                </li>
-            ))}
-            {birthdays.length === 0 && <p className="text-gray-500 italic">¡Nadie cumple años este mes!</p>}
-        </ul>
+        {objectivesList.length > 0 ? (
+            <ul className="space-y-3 pt-2">
+                {objectivesList.map((obj, index) => (
+                    <li key={obj.id || index} className="flex flex-col text-gray-700 p-3 bg-indigo-50 rounded-lg border-l-4 border-indigo-300 hover:bg-indigo-100 transition-colors">
+                        <span className="font-medium text-indigo-800 truncate">{obj.title_objective}</span>
+                        <span className="text-xs text-gray-500 mt-0.5">
+                            Fecha Límite: {new Date(obj.end_date_objective).toLocaleDateString('es-CO')}
+                        </span>
+                    </li>
+                ))}
+            </ul>
+        ) : (
+            <p className="text-gray-500 pt-2 text-center italic">No hay objetivos pendientes.</p>
+        )}
     </motion.div>
 );
 
-const MonthlyEvents = ({ events }) => (
+// Componente para mostrar los Eventos del mes (o próximos)
+const MonthlyEvents = ({ events = [] }) => (
     <motion.div 
-        whileHover={{ y: -2, boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.06)" }}
-        transition={{ type: "spring", stiffness: 300 }}
-        className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 cursor-pointer" 
+        initial={{ opacity: 0, y: 50 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3, type: "spring", stiffness: 300 }}
+        className="bg-white p-6 rounded-xl shadow-md border border-gray-200 hover:shadow-lg transition-shadow" 
     >
-        <div className="flex items-center space-x-3 text-emerald-600 mb-4 border-b border-gray-100 pb-2">
+        <div className="flex items-center space-x-3 text-yellow-600 mb-4 border-b border-gray-100 pb-2">
             <CalendarIcon className="w-6 h-6" />
-            <h2 className="text-xl font-semibold text-gray-800">Eventos</h2>
+            <h2 className="text-xl font-semibold text-gray-800">Próximos Eventos</h2>
         </div>
-        <ul className="space-y-2 pt-2">
-            {events.map((event, index) => (
-                <li key={index} className="p-3 bg-emerald-50 rounded-lg hover:bg-emerald-100 transition-colors">
-                    <h4 className="font-semibold text-gray-800">{event.title}</h4>
-                    <p className="text-sm text-gray-600">{event.date} - <span className="font-bold text-emerald-600">{event.time}</span></p>
-                </li>
-            ))}
-            {events.length === 0 && <p className="text-gray-500 italic">No hay eventos programados.</p>}
-        </ul>
+        {events.length > 0 ? (
+            <ul className="space-y-3 pt-2">
+                {events.map((event, index) => (
+                    <li key={event.id || index} className="flex justify-between items-center text-gray-700 p-3 bg-yellow-50 rounded-lg border-l-4 border-yellow-300 hover:bg-yellow-100 transition-colors">
+                        <span className="flex items-center text-yellow-800">
+                            <SparklesIcon className="w-4 h-4 mr-2 text-yellow-500 flex-shrink-0"/>
+                            <span className="truncate">{event.title_event}</span>
+                        </span>
+                        <span className="font-medium text-yellow-700 text-sm flex-shrink-0 ml-2">
+                            {new Date(event.event_date).toLocaleDateString('es-CO')}
+                        </span>
+                    </li>
+                ))}
+            </ul>
+        ) : (
+             <p className="text-gray-500 pt-2 text-center italic">No hay eventos próximos.</p>
+        )}
     </motion.div>
 );
 
 
-// -------------------------------------------------------------------------------------
-// --- Componente Principal DASHBOARD ---
+// -------------------------------------------------------------------------
+// --- COMPONENTE PRINCIPAL: Dashboard.jsx ---
 
 export default function Dashboard() {
-    const { user } = useAuth();
-    
-    const [dashboardData, setDashboardData] = useState({
-        stats: {},
-        news: [],
-        birthdays: [],
-        events: [],
-        infoImages: [],
-    });
-    const [isLoading, setIsLoading] = useState(true);
+    const { apiClient, user } = useAuth(); // Obtener el usuario y el cliente de API
+    const IMAGE_BASE_URL = getBaseUrl(apiClient); // Obtenemos la URL base del servidor
+
+    // Estados
+    const [newsList, setNewsList] = useState([]);
+    const [objectivesList, setObjectivesList] = useState([]);
+    const [eventsList, setEventsList] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    // Datos de ejemplo/mock para otras tarjetas
+    // Puedes reemplazar esto con llamadas a la API para contar usuarios, empresas, etc.
+    const [metrics, setMetrics] = useState({ users: 24, companies: 8, regionals: 3 }); 
+    const [birthdays, setBirthdays] = useState([]); 
 
     useEffect(() => {
-        const loadData = async () => {
+        const fetchDashboardData = async () => {
+            setLoading(true);
             try {
-                const data = await fetchData(); 
-                setDashboardData(data);
+                // Realizar todas las llamadas API en paralelo
+                const [newsResponse, objectivesResponse, eventsResponse] = await Promise.all([
+                    apiClient.get('/news'), // API de Noticias
+                    apiClient.get('/objectives'), // API de Objetivos
+                    apiClient.get('/events'), // API de Eventos
+                ]);
+                
+                // 1. Noticias para el carrusel
+                setNewsList(newsResponse.data || []); 
+
+                // 2. Objetivos (Tomar los 5 más recientes/pendientes)
+                setObjectivesList(objectivesResponse.data ? objectivesResponse.data.slice(0, 5) : []); 
+
+                // 3. Eventos (Tomar los 5 más recientes/próximos)
+                setEventsList(eventsResponse.data ? eventsResponse.data.slice(0, 5) : []); 
+                
+                // Datos mock para cumpleaños
+                setBirthdays([
+                    { name: 'Juan Pérez', date: '05/Dic' },
+                    { name: 'Ana Gómez', date: '12/Dic' },
+                    { name: 'Carlos Ruiz', date: '15/Dic' },
+                ]);
+
             } catch (error) {
                 console.error("Error al cargar datos del dashboard:", error);
             } finally {
-                setIsLoading(false);
+                setLoading(false);
             }
         };
-        loadData();
-    }, []); 
 
-    const mockUserData = {
-        role: "Gerente de Proyectos",
-        company: "Innovación Digital S.A.S."
-    };
-    const userData = { ...user, ...mockUserData }; 
-    
-    const { stats, news, birthdays, events, infoImages } = dashboardData;
+        fetchDashboardData();
+    }, [apiClient]); 
 
-    if (isLoading) {
+
+    if (loading) {
         return (
-            <AuthenticatedLayout title="Dashboard Principal">
-                <div className="h-[calc(100vh-80px)] w-full flex items-center justify-center text-gray-600">
-                    <div className="flex flex-col items-center">
-                        <motion.div 
-                            animate={{ rotate: 360 }}
-                            transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
-                            className="w-10 h-10 border-4 border-indigo-500 border-t-transparent rounded-full mb-4"
-                        ></motion.div>
-                        <p className="text-lg font-light animate-pulse">Cargando información...</p>
-                    </div>
+            <AuthenticatedLayout title="Cargando Panel">
+                <div className="flex justify-center items-center h-full py-20">
+                    <svg className="animate-spin -ml-1 mr-3 h-10 w-10 text-indigo-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <span className="text-lg font-medium text-gray-700">Cargando información del panel...</span>
                 </div>
             </AuthenticatedLayout>
         );
     }
     
+    // Contenido JSX del Dashboard
     return (
-        <AuthenticatedLayout title="Dashboard Principal">
-            {/* [SOLUCIÓN]: 'w-full' para asegurar el ancho correcto dentro del layout fijo */}
-            <div className="w-full p-6 md:p-12"> 
-                <div className="space-y-12 max-w-7xl mx-auto">
+        <AuthenticatedLayout title="Panel de Control">
+            <div className="py-12 bg-gray-100 min-h-screen">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     
-                    {/* 1. Bienvenida y Video */}
-                    <motion.div
-                        initial={{ opacity: 0, y: -10 }}
+                    {/* 1. SECCIÓN DE BIENVENIDA Y VIDEO */}
+                    <motion.div 
+                        initial={{ opacity: 0, y: -20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.5 }}
-                        className="space-y-6"
+                        className="bg-white p-8 rounded-xl shadow-lg mb-10 border-t-4 border-indigo-600"
                     >
-                        {/* Tarjeta de Bienvenida */}
-                        <div className="p-6 bg-white rounded-xl shadow-sm border border-gray-200">
-                            <h1 className="text-3xl md:text-4xl font-extrabold text-gray-900">
-                                ¡Hola, {userData?.name || userData?.name_user || 'Usuario'}!
-                            </h1>
-                            <p className="text-gray-500 mt-2 text-lg">
-                                Tu resumen ejecutivo.
-                            </p>
-                            <div className="mt-4 flex items-center text-base font-semibold text-gray-700">
-                                <div className="flex items-center text-indigo-600">
-                                    <BriefcaseIcon className="w-5 h-5 mr-2" />
-                                    <span className="font-normal">**Rol:** {userData.role}</span>
-                                </div>
-                            </div>
+                        {/* Saludo Personalizado */}
+                        <h1 className="text-3xl font-extrabold text-gray-900">
+                            ¡Bienvenido, <span className="text-indigo-600">{user?.name || 'Usuario'}</span>!
+                        </h1>
+                        <p className="text-lg text-gray-500 mt-1">
+                            Este es tu resumen ejecutivo del sistema.
+                        </p>
+                        
+                        {/* Contenedor del Video */}
+                        <div className="mt-6 w-full aspect-video rounded-lg overflow-hidden shadow-xl">
+                             <iframe 
+                                width="100%" 
+                                height="100%" 
+                                src="https://www.youtube.com/embed/TCeimTP8itc?si=N7m-SsH65DjtoxAo" // REEMPLAZAR con URL de video institucional
+                                title="Video Institucional de Bienvenida" 
+                                frameBorder="0" 
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                                allowFullScreen
+                                className="w-full h-full"
+                            ></iframe>
                         </div>
-
-                        {/* Video de Bienvenida */}
-                        <VideoHero />
                     </motion.div>
 
-                    {/* 2. Estadísticas (Fila 2) */}
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-                        <StatCard title="Usuarios Totales" value={stats.users} icon={UsersIcon} colorClass="text-indigo-600" />
-                        <StatCard title="Inventario (Unidades)" value={stats.inventoryCount} icon={CubeIcon} colorClass="text-cyan-600" />
-                        <StatCard title="Valor Inventario" value={stats.inventoryValue} icon={CurrencyDollarIcon} colorClass="text-emerald-600" />
-                        <StatCard title="Documentos Activos" value={stats.documents} icon={DocumentTextIcon} colorClass="text-yellow-600" />
-                        <StatCard title="Ventas Hoy" value={stats.salesToday} icon={ChartBarIcon} colorClass="text-red-600" />
-                    </div>
-                    
-                    {/* 3. Carrusel de Imágenes (Fila 3) */}
-                    <ImageCarousel images={infoImages} />
-                    
-                    {/* 4. Contenido Dinámico (Fila 4) */}
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        <UserRoleSection role={userData.role} company={userData.company} /> 
-                        <NewsCarousel news={news} />
+                    {/* 2. CARRUSEL DE NOTICIAS */}
+                    <div className="mb-10">
+                        <h2 className="text-2xl font-bold text-gray-800 mb-4">Últimas Noticias</h2>
+                        <NewsCarousel newsList={newsList} IMAGE_BASE_URL={IMAGE_BASE_URL} />
                     </div>
 
-                    {/* Fila 5: Calendario y Eventos */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <BirthdayCalendar birthdays={birthdays} />
-                        <MonthlyEvents events={events} />
+                    {/* 3. SECCIÓN DE MÉTRICAS PRINCIPALES (Targetas) */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+                         <motion.div 
+                            initial={{ opacity: 0, scale: 0.9 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ type: "spring", stiffness: 400 }}
+                            className="bg-white p-6 rounded-xl shadow-lg border-l-4 border-blue-600 hover:bg-blue-50 transition-colors cursor-pointer"
+                        >
+                            <div className="flex items-center justify-between">
+                                <p className="text-sm font-medium text-gray-500">Usuarios Activos</p>
+                                <UsersIcon className="w-7 h-7 text-blue-600 bg-blue-100 p-1 rounded-full" />
+                            </div>
+                            <p className="text-4xl font-extrabold text-gray-900 mt-2">{metrics.users}</p>
+                        </motion.div>
+
+                        <motion.div 
+                            initial={{ opacity: 0, scale: 0.9 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ delay: 0.1, type: "spring", stiffness: 400 }}
+                            className="bg-white p-6 rounded-xl shadow-lg border-l-4 border-red-600 hover:bg-red-50 transition-colors cursor-pointer"
+                        >
+                            <div className="flex items-center justify-between">
+                                <p className="text-sm font-medium text-gray-500">Empresas Registradas</p>
+                                <BriefcaseIcon className="w-7 h-7 text-red-600 bg-red-100 p-1 rounded-full" />
+                            </div>
+                            <p className="text-4xl font-extrabold text-gray-900 mt-2">{metrics.companies}</p>
+                        </motion.div>
+
+                        <motion.div 
+                            initial={{ opacity: 0, scale: 0.9 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ delay: 0.2, type: "spring", stiffness: 400 }}
+                            className="bg-white p-6 rounded-xl shadow-lg border-l-4 border-yellow-600 hover:bg-yellow-50 transition-colors cursor-pointer"
+                        >
+                            <div className="flex items-center justify-between">
+                                <p className="text-sm font-medium text-gray-500">Próximos Eventos</p>
+                                <CalendarIcon className="w-7 h-7 text-yellow-600 bg-yellow-100 p-1 rounded-full" />
+                            </div>
+                            <p className="text-4xl font-extrabold text-gray-900 mt-2">{eventsList.length}</p>
+                        </motion.div>
+
+                        <motion.div 
+                            initial={{ opacity: 0, scale: 0.9 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ delay: 0.3, type: "spring", stiffness: 400 }}
+                            className="bg-white p-6 rounded-xl shadow-lg border-l-4 border-indigo-600 hover:bg-indigo-50 transition-colors cursor-pointer"
+                        >
+                            <div className="flex items-center justify-between">
+                                <p className="text-sm font-medium text-gray-500">Objetivos Pendientes</p>
+                                <TrophyIcon className="w-7 h-7 text-indigo-600 bg-indigo-100 p-1 rounded-full" />
+                            </div>
+                            <p className="text-4xl font-extrabold text-gray-900 mt-2">{objectivesList.length}</p>
+                        </motion.div>
                     </div>
-                    
+
+                    {/* 4. SECCIÓN DE RESUMEN: Objetivos y Eventos */}
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <RecentObjectivesCard objectivesList={objectivesList} />
+                        <MonthlyEvents events={eventsList} /> 
+                    </div>
+
+                    {/* 5. SECCIÓN DE CUMPLEAÑOS */}
+                     <div className="mt-10 grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <motion.div
+                            initial={{ opacity: 0, x: 50 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: 0.4, type: "spring", stiffness: 300 }}
+                            className="bg-white p-6 rounded-xl shadow-md border border-gray-200 hover:shadow-lg transition-shadow" 
+                        >
+                            <div className="flex items-center space-x-3 text-pink-600 mb-4 border-b border-gray-100 pb-2">
+                                <CakeIcon className="w-6 h-6" />
+                                <h2 className="text-xl font-semibold text-gray-800">Cumpleaños (Próximos)</h2>
+                            </div>
+                            <ul className="space-y-3 pt-2">
+                                {birthdays.length > 0 ? (
+                                    birthdays.map((person, index) => (
+                                        <li key={index} className="flex justify-between items-center text-gray-700 p-3 bg-pink-50 rounded-lg border-l-4 border-pink-300 hover:bg-pink-100 transition-colors">
+                                            <span className="flex items-center text-pink-800">
+                                                <SparklesIcon className="w-4 h-4 mr-2 text-pink-500 flex-shrink-0"/>
+                                                <span className="font-medium truncate">{person.name}</span>
+                                            </span>
+                                            <span className="font-semibold text-pink-700 text-sm flex-shrink-0 ml-2">{person.date}</span>
+                                        </li>
+                                    ))
+                                ) : (
+                                    <p className="text-gray-500 pt-2 text-center italic">No hay cumpleaños cercanos.</p>
+                                )}
+                            </ul>
+                        </motion.div>
+                    </div>
                 </div>
             </div>
         </AuthenticatedLayout>
