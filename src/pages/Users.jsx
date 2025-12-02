@@ -6,7 +6,8 @@ import { useAuth } from '../context/AuthContext';
 import { PencilIcon, TrashIcon, PlusIcon, XMarkIcon } from '@heroicons/react/24/outline';
 
 // --- ROLES MANTENIDOS COMO DATO LOCAL (HARDCODED) ---
-const HARDCODED_ROLES = ['Administrador', 'Gestor', 'Administrativo', 'Asesor'];
+// Se mantiene como fallback, pero se cargará desde la API.
+const HARDCODED_ROLES = ['Administrador', 'Gestor', 'Administrativo', 'Asesor']; 
 
 // --- NUEVO COLOR PRIMARIO ---
 const PRIMARY_COLOR = 'rgba(5, 25, 49)'; // #051931
@@ -31,6 +32,9 @@ const UserFormModal = ({ isOpen, onClose, userToEdit, onSave, selectOptions }) =
     const defaultRegionalId = regionals[0]?.id || '';
     const defaultPositionId = positions[0]?.id || '';
     
+    // El rol por defecto ahora usa el primer rol cargado de la API (que es un objeto con la propiedad 'name')
+    const defaultRoleName = roles[0]?.name || HARDCODED_ROLES[0]; 
+    
     const [formData, setFormData] = useState({
         name_user: userToEdit?.name_user || '',
         last_name_user: userToEdit?.last_name_user || '',
@@ -42,13 +46,17 @@ const UserFormModal = ({ isOpen, onClose, userToEdit, onSave, selectOptions }) =
         regional_id: userToEdit?.regional_id || defaultRegionalId,
         position_id: userToEdit?.position_id || defaultPositionId,
         password: '',
-        role_name: userToEdit?.roles?.[0]?.name || roles[0],
+        // AHORA: El rol se inicializa con el nombre del rol existente o el primer nombre de la lista dinámica
+        role_name: userToEdit?.roles?.[0]?.name || defaultRoleName,
     });
     
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
 
     useEffect(() => {
+        // Asegurar que el rol por defecto se actualice si la lista de roles se carga después
+        const currentDefaultRoleName = roles[0]?.name || HARDCODED_ROLES[0];
+
         // Reinicia el formulario cuando el modal se abre o el usuario a editar cambia
         if (userToEdit) {
             setFormData({
@@ -62,7 +70,8 @@ const UserFormModal = ({ isOpen, onClose, userToEdit, onSave, selectOptions }) =
                 regional_id: userToEdit.regional_id || defaultRegionalId,
                 position_id: userToEdit.position_id || defaultPositionId,
                 password: '',
-                role_name: userToEdit.roles?.[0]?.name || roles[0],
+                // Usa el rol del usuario a editar o el primer rol de la lista dinámica
+                role_name: userToEdit.roles?.[0]?.name || currentDefaultRoleName,
             });
         } else {
             // Limpia el formulario para crear, usando los primeros IDs de las opciones cargadas
@@ -72,7 +81,8 @@ const UserFormModal = ({ isOpen, onClose, userToEdit, onSave, selectOptions }) =
                 regional_id: defaultRegionalId,
                 position_id: defaultPositionId,
                 password: '',
-                role_name: roles[0],
+                // Usa el primer rol de la lista dinámica
+                role_name: currentDefaultRoleName,
             });
         }
         setError(null);
@@ -292,13 +302,16 @@ const UserFormModal = ({ isOpen, onClose, userToEdit, onSave, selectOptions }) =
                                 onChange={handleChange}
                                 className="mt-1 w-full p-2 border border-gray-300 rounded-md bg-white"
                                 required
+                                disabled={roles.length === 0} // Deshabilitar si no hay datos
                             >
                                 <option value="" disabled>Selecciona un rol</option>
-                                {/* 💡 Usa roles de props (HARDCODED_ROLES) */}
+                                {/* 💡 Usa roles de props cargados desde la API, esperando {id, name} */}
                                 {roles.map(role => (
-                                    <option key={role} value={role}>{role}</option>
+                                    // Usamos role.name como value y texto visible
+                                    <option key={role.id} value={role.name}>{role.name}</option>
                                 ))}
                             </select>
+                            {roles.length === 0 && <p className="text-xs text-red-500 mt-1">Cargando roles...</p>}
                         </div>
                         {/* Campo Contraseña */}
                         <div>
@@ -322,7 +335,8 @@ const UserFormModal = ({ isOpen, onClose, userToEdit, onSave, selectOptions }) =
                     <div className="border-t pt-6">
                         <button 
                             type="submit"
-                            disabled={loading || companies.length === 0 || regionals.length === 0 || positions.length === 0}
+                            // Se añade roles.length === 0 como condición para deshabilitar
+                            disabled={loading || companies.length === 0 || regionals.length === 0 || positions.length === 0 || roles.length === 0} 
                             className="w-full py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white transition font-bold disabled:opacity-50"
                             style={{ backgroundColor: PRIMARY_COLOR, transition: 'background-color 0.2s' }}
                             onMouseOver={e => e.currentTarget.style.backgroundColor = 'rgba(5, 25, 49, 0.9)'}
@@ -354,7 +368,7 @@ export default function Users() {
 
     // NUEVOS ESTADOS para almacenar los datos de los dropdowns
     const [selectOptions, setSelectOptions] = useState({
-        roles: HARDCODED_ROLES, // Usar los roles hardcodeados
+        roles: [], // 👈 Inicializamos roles como un array vacío
         companies: [],
         regionals: [],
         positions: [],
@@ -365,29 +379,34 @@ export default function Users() {
     // 2.1 FUNCIÓN DE CARGA DE OPCIONES
     // **********************************
     
-    // Función para obtener los datos de los dropdowns (Empresas, Regionales, Puestos)
+    // Función para obtener los datos de los dropdowns (Empresas, Regionales, Puestos, Roles)
     const fetchSelectOptions = async () => {
         setOptionsLoading(true);
         try {
             // Cargar datos en paralelo para mejorar la velocidad
-            const [companiesRes, regionalsRes, positionsRes] = await Promise.all([
+            // 💡 Se añade la llamada a /roles
+            const [companiesRes, regionalsRes, positionsRes, rolesRes] = await Promise.all([
                 apiClient.get('/companies'), 
                 apiClient.get('/regionals'), 
                 apiClient.get('/positions'), 
+                apiClient.get('/roles'), // 👈 Nueva llamada para Roles
             ]);
 
             setSelectOptions(prev => ({
                 ...prev,
                 // Maneja la respuesta de Laravel: espera 'data' o el cuerpo completo de la respuesta
-                // IMPORTANTE: Si la API de Laravel no tiene la clave 'data', se usará companiesRes.data
                 companies: companiesRes.data.data || companiesRes.data,
                 regionals: regionalsRes.data.data || regionalsRes.data,
                 positions: positionsRes.data.data || positionsRes.data,
+                // 💡 Almacena los roles obtenidos
+                roles: rolesRes.data.data || rolesRes.data, 
             }));
         } catch (err) {
             console.error('Error al cargar datos de opciones para el formulario:', err.response?.data || err);
             // Muestra un error más genérico si la API falla
-            setError('Error al cargar datos de Empresas, Regionales o Puestos. Verifica la conexión con el servidor.');
+            setError('Error al cargar datos de Roles, Empresas, Regionales o Puestos. Verifica la conexión con el servidor.');
+            // En caso de fallo de roles, se puede dejar el array vacío.
+            setSelectOptions(prev => ({ ...prev, roles: [] }));
         } finally {
             setOptionsLoading(false);
         }
@@ -402,6 +421,7 @@ export default function Users() {
             const fetchedUsers = (response.data.data || response.data).map(u => ({
                  ...u,
                  // Normaliza la estructura de roles: debe ser un array de objetos con propiedad 'name'
+                 // Asegura que u.roles es un array. Si es una cadena/objeto, se convierte a array de objetos {name: ...}
                  roles: Array.isArray(u.roles) ? u.roles : (u.roles ? [{ name: u.roles[0] }] : [{ name: 'Sin rol' }])
             }));
             setUsers(fetchedUsers);
@@ -450,6 +470,7 @@ export default function Users() {
              ...savedUser,
              // Asegura que el `company_id` se mantenga (especialmente importante para el listado)
              company_id: savedUser.company_id || (savedUser.company_id === 0 ? savedUser.company_id : selectOptions.companies[0]?.id),
+             // Normaliza la estructura de roles al guardar
              roles: Array.isArray(savedUser.roles) ? savedUser.roles : (savedUser.roles ? [{ name: savedUser.roles[0] }] : [{ name: savedUser.role_name || 'Sin rol' }])
         };
 

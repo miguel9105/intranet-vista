@@ -3,10 +3,34 @@ import React, { useState, useEffect } from 'react';
 import AuthenticatedLayout from '../layouts/AuthenticatedLayout';
 import { useAuth } from '../context/AuthContext'; 
 import { 
-    UsersIcon, BriefcaseIcon, TrophyIcon, MegaphoneIcon, CakeIcon, 
-    CalendarIcon, SparklesIcon, ChevronLeftIcon, ChevronRightIcon
+    // Iconos de las tarjetas de métricas
+    UsersIcon, 
+    BriefcaseIcon, 
+    TrophyIcon, // Usado en métricas
+    // Iconos de la lista de detalles
+    LightBulbIcon, // Para Objetivos
+    ClipboardDocumentListIcon, // Para Eventos
+    ClockIcon, // Para la hora de Eventos
+    GiftIcon, // Para el título de Cumpleaños
+    CakeIcon, // Para la lista de Cumpleaños
+    // Iconos de navegación y utilidades
+    SparklesIcon, 
+    ChevronLeftIcon, 
+    ChevronRightIcon
 } from '@heroicons/react/24/outline'; 
 import { motion } from 'framer-motion'; 
+
+// Color principal: rgba(5, 25, 49) - Para Tailwind, lo simularemos con indigo-950 o un color personalizado en el config.
+// Por simplicidad y minimalismo, usaremos 'indigo-950' o 'blue-900' que son similares a nivel de tono oscuro.
+// El color $rgba(5, 25, 49)$ se puede representar como un color de texto o borde personalizado: text-[rgb(5,25,49)]
+
+// Definición de colores base para el tema minimalista
+const PRIMARY_COLOR_CLASS = 'text-[rgb(5,25,49)]'; 
+const ACCENT_COLOR_CLASS = 'border-[rgb(5,25,49)]';
+const BG_ACCENT_COLOR_CLASS = 'bg-[rgba(5,25,49,0.05)]'; // Fondo muy claro para el acento
+const OBJECTIVE_COLOR_CLASS = 'text-red-700'; // Rojo para los objetivos (urgencia/pendiente)
+const OBJECTIVE_BG_CLASS = 'bg-red-50 hover:bg-red-100';
+
 
 /**
  * Función para obtener la URL base del servidor Laravel.
@@ -40,17 +64,13 @@ const NewsCarousel = ({ newsList = [], IMAGE_BASE_URL }) => {
 
     if (newsList.length === 0) {
         return (
-            <div className="bg-white p-6 rounded-xl shadow-lg border-l-4 border-emerald-600 text-center text-gray-500 italic h-[450px] flex items-center justify-center">
+            <div className="bg-white p-6 rounded-xl shadow-lg border-l-4 border-gray-300 text-center text-gray-500 italic h-[450px] flex items-center justify-center">
                 <p>No hay noticias publicadas para el carrusel.</p>
             </div>
         );
     }
     
-    /**
-     * ✅ SOLUCIÓN DE IMAGEN: Transforma la ruta interna de Laravel ('public/news_images/...')
-     * a la URL pública accesible por el navegador. Usamos la ruta RELATIVA ('/storage/...')
-     * para asegurar el correcto funcionamiento, especialmente en entornos de desarrollo.
-     */
+    
     const getImageUrl = (path) => {
         if (!path) return '/placeholder.jpg'; // Imagen por defecto si no hay ruta
         
@@ -84,10 +104,7 @@ const NewsCarousel = ({ newsList = [], IMAGE_BASE_URL }) => {
                             backgroundPosition: 'center',
                         }}
                     >
-                        {/* ✅ MEJORA DE CONTRASTE: Overlay más ligero (bg-opacity-20) para 
-                            que la imagen se vea más, y un gradiente fuerte en la parte inferior 
-                            para asegurar la legibilidad del texto blanco. 
-                        */}
+                        {/* Overlay para contraste */}
                         <div className="absolute inset-0 bg-black bg-opacity-20 flex items-end">
                             <div className="p-6 w-full bg-gradient-to-t from-black/80 to-transparent">
                                 {/* Título de la noticia (Campo: title) */}
@@ -141,7 +158,7 @@ const NewsCarousel = ({ newsList = [], IMAGE_BASE_URL }) => {
 // --- OTROS COMPONENTES DE RESUMEN ---
 // =======================================================================
 
-// Componente para mostrar los últimos Objetivos
+// Componente para mostrar los últimos Objetivos (ROJO)
 const RecentObjectivesCard = ({ objectivesList = [] }) => (
     <motion.div 
         initial={{ opacity: 0, y: 50 }}
@@ -149,15 +166,16 @@ const RecentObjectivesCard = ({ objectivesList = [] }) => (
         transition={{ delay: 0.2, type: "spring", stiffness: 300 }}
         className="bg-white p-6 rounded-xl shadow-md border border-gray-200 hover:shadow-lg transition-shadow"
     >
-        <div className="flex items-center space-x-3 text-indigo-600 mb-4 border-b border-gray-100 pb-2">
-            <TrophyIcon className="w-6 h-6" />
+        <div className={`flex items-center space-x-3 ${OBJECTIVE_COLOR_CLASS} mb-4 border-b border-gray-100 pb-2`}>
+            {/* ICONO AJUSTADO: Se usa LightBulbIcon para representar 'Objetivos/Metas' */}
+            <LightBulbIcon className="w-6 h-6" /> 
             <h2 className="text-xl font-semibold text-gray-800">Objetivos Pendientes</h2>
         </div>
         {objectivesList.length > 0 ? (
             <ul className="space-y-3 pt-2">
                 {objectivesList.map((obj, index) => (
-                    <li key={obj.id || index} className="flex flex-col text-gray-700 p-3 bg-indigo-50 rounded-lg border-l-4 border-indigo-300 hover:bg-indigo-100 transition-colors">
-                        <span className="font-medium text-indigo-800 truncate">{obj.title_objective}</span>
+                    <li key={obj.id || index} className={`flex flex-col text-gray-700 p-3 ${OBJECTIVE_BG_CLASS} rounded-lg border-l-4 border-red-300 transition-colors`}>
+                        <span className={`font-medium ${OBJECTIVE_COLOR_CLASS} truncate`}>{obj.title_objective}</span>
                         <span className="text-xs text-gray-500 mt-0.5">
                             Fecha Límite: {new Date(obj.end_date_objective).toLocaleDateString('es-CO')}
                         </span>
@@ -170,7 +188,7 @@ const RecentObjectivesCard = ({ objectivesList = [] }) => (
     </motion.div>
 );
 
-// Componente para mostrar los Eventos del mes (o próximos)
+// Componente para mostrar los Eventos del mes (AZUL OSCURO y con HORA)
 const MonthlyEvents = ({ events = [] }) => (
     <motion.div 
         initial={{ opacity: 0, y: 50 }}
@@ -178,23 +196,31 @@ const MonthlyEvents = ({ events = [] }) => (
         transition={{ delay: 0.3, type: "spring", stiffness: 300 }}
         className="bg-white p-6 rounded-xl shadow-md border border-gray-200 hover:shadow-lg transition-shadow" 
     >
-        <div className="flex items-center space-x-3 text-yellow-600 mb-4 border-b border-gray-100 pb-2">
-            <CalendarIcon className="w-6 h-6" />
+        <div className={`flex items-center space-x-3 ${PRIMARY_COLOR_CLASS} mb-4 border-b border-gray-100 pb-2`}>
+            {/* ICONO AJUSTADO: Se usa CalendarIcon (o ClipboardDocumentListIcon) */}
+            <ClipboardDocumentListIcon className="w-6 h-6" /> 
             <h2 className="text-xl font-semibold text-gray-800">Próximos Eventos</h2>
         </div>
         {events.length > 0 ? (
             <ul className="space-y-3 pt-2">
-                {events.map((event, index) => (
-                    <li key={event.id || index} className="flex justify-between items-center text-gray-700 p-3 bg-yellow-50 rounded-lg border-l-4 border-yellow-300 hover:bg-yellow-100 transition-colors">
-                        <span className="flex items-center text-yellow-800">
-                            <SparklesIcon className="w-4 h-4 mr-2 text-yellow-500 flex-shrink-0"/>
-                            <span className="truncate">{event.title_event}</span>
-                        </span>
-                        <span className="font-medium text-yellow-700 text-sm flex-shrink-0 ml-2">
-                            {new Date(event.event_date).toLocaleDateString('es-CO')}
-                        </span>
-                    </li>
-                ))}
+                {events.map((event, index) => {
+                    const eventDate = new Date(event.event_date);
+                    const formattedDate = eventDate.toLocaleDateString('es-CO');
+                    // Formato de hora, asumiendo que event_date incluye la hora
+                    const formattedTime = eventDate.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' });
+                    
+                    return (
+                        <li key={event.id || index} className={`flex justify-between items-center text-gray-700 p-3 ${BG_ACCENT_COLOR_CLASS} rounded-lg border-l-4 ${ACCENT_COLOR_CLASS} transition-colors`}>
+                            <span className={`flex flex-col text-gray-700`}>
+                                <span className={`font-medium ${PRIMARY_COLOR_CLASS} truncate`}>{event.title_event}</span>
+                                <span className="text-xs text-gray-500 mt-0.5 flex items-center">
+                                    <ClockIcon className="w-3 h-3 mr-1"/>
+                                    {formattedDate} a las {formattedTime}
+                                </span>
+                            </span>
+                        </li>
+                    );
+                })}
             </ul>
         ) : (
              <p className="text-gray-500 pt-2 text-center italic">No hay eventos próximos.</p>
@@ -263,7 +289,7 @@ export default function Dashboard() {
         return (
             <AuthenticatedLayout title="Cargando Panel">
                 <div className="flex justify-center items-center h-full py-20">
-                    <svg className="animate-spin -ml-1 mr-3 h-10 w-10 text-indigo-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <svg className={`animate-spin -ml-1 mr-3 h-10 w-10 ${PRIMARY_COLOR_CLASS}`} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
@@ -284,11 +310,11 @@ export default function Dashboard() {
                         initial={{ opacity: 0, y: -20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.5 }}
-                        className="bg-white p-8 rounded-xl shadow-lg mb-10 border-t-4 border-indigo-600"
+                        className={`bg-white p-8 rounded-xl shadow-lg mb-10 border-t-4 ${ACCENT_COLOR_CLASS}`} // Borde superior con color principal
                     >
                         {/* Saludo Personalizado */}
                         <h1 className="text-3xl font-extrabold text-gray-900">
-                            ¡Bienvenido, <span className="text-indigo-600">{user?.name || 'Usuario'}</span>!
+                            ¡Bienvenido, <span className={PRIMARY_COLOR_CLASS}>{user?.name || 'Usuario'}</span>!
                         </h1>
                         <p className="text-lg text-gray-500 mt-1">
                             Este es tu resumen ejecutivo del sistema.
@@ -315,56 +341,61 @@ export default function Dashboard() {
                         <NewsCarousel newsList={newsList} IMAGE_BASE_URL={IMAGE_BASE_URL} />
                     </div>
 
-                    {/* 3. SECCIÓN DE MÉTRICAS PRINCIPALES (Targetas) */}
+                    {/* 3. SECCIÓN DE MÉTRICAS PRINCIPALES (Targetas) - Diseño Minimalista */}
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+                         {/* Tarjeta 1: Usuarios Activos */}
                          <motion.div 
                             initial={{ opacity: 0, scale: 0.9 }}
                             animate={{ opacity: 1, scale: 1 }}
                             transition={{ type: "spring", stiffness: 400 }}
-                            className="bg-white p-6 rounded-xl shadow-lg border-l-4 border-blue-600 hover:bg-blue-50 transition-colors cursor-pointer"
+                            className={`bg-white p-6 rounded-xl shadow-lg border-l-4 border-gray-300 hover:shadow-xl transition-shadow cursor-pointer`}
                         >
                             <div className="flex items-center justify-between">
                                 <p className="text-sm font-medium text-gray-500">Usuarios Activos</p>
-                                <UsersIcon className="w-7 h-7 text-blue-600 bg-blue-100 p-1 rounded-full" />
+                                {/* Icono con color principal y fondo suave */}
+                                <UsersIcon className={`w-7 h-7 ${PRIMARY_COLOR_CLASS} ${BG_ACCENT_COLOR_CLASS} p-1 rounded-full`} />
                             </div>
                             <p className="text-4xl font-extrabold text-gray-900 mt-2">{metrics.users}</p>
                         </motion.div>
 
+                        {/* Tarjeta 2: Empresas Registradas */}
                         <motion.div 
                             initial={{ opacity: 0, scale: 0.9 }}
                             animate={{ opacity: 1, scale: 1 }}
                             transition={{ delay: 0.1, type: "spring", stiffness: 400 }}
-                            className="bg-white p-6 rounded-xl shadow-lg border-l-4 border-red-600 hover:bg-red-50 transition-colors cursor-pointer"
+                            className={`bg-white p-6 rounded-xl shadow-lg border-l-4 border-gray-300 hover:shadow-xl transition-shadow cursor-pointer`}
                         >
                             <div className="flex items-center justify-between">
                                 <p className="text-sm font-medium text-gray-500">Empresas Registradas</p>
-                                <BriefcaseIcon className="w-7 h-7 text-red-600 bg-red-100 p-1 rounded-full" />
+                                <BriefcaseIcon className={`w-7 h-7 ${PRIMARY_COLOR_CLASS} ${BG_ACCENT_COLOR_CLASS} p-1 rounded-full`} />
                             </div>
                             <p className="text-4xl font-extrabold text-gray-900 mt-2">{metrics.companies}</p>
                         </motion.div>
 
+                        {/* Tarjeta 3: Próximos Eventos (Usa el color principal) */}
                         <motion.div 
                             initial={{ opacity: 0, scale: 0.9 }}
                             animate={{ opacity: 1, scale: 1 }}
                             transition={{ delay: 0.2, type: "spring", stiffness: 400 }}
-                            className="bg-white p-6 rounded-xl shadow-lg border-l-4 border-yellow-600 hover:bg-yellow-50 transition-colors cursor-pointer"
+                             className={`bg-white p-6 rounded-xl shadow-lg border-l-4 border-gray-300 hover:shadow-xl transition-shadow cursor-pointer`}
                         >
                             <div className="flex items-center justify-between">
                                 <p className="text-sm font-medium text-gray-500">Próximos Eventos</p>
-                                <CalendarIcon className="w-7 h-7 text-yellow-600 bg-yellow-100 p-1 rounded-full" />
+                                <ClipboardDocumentListIcon className={`w-7 h-7 ${PRIMARY_COLOR_CLASS} ${BG_ACCENT_COLOR_CLASS} p-1 rounded-full`} />
                             </div>
                             <p className="text-4xl font-extrabold text-gray-900 mt-2">{eventsList.length}</p>
                         </motion.div>
 
+                        {/* Tarjeta 4: Objetivos Pendientes (Usa color rojo) */}
                         <motion.div 
                             initial={{ opacity: 0, scale: 0.9 }}
                             animate={{ opacity: 1, scale: 1 }}
                             transition={{ delay: 0.3, type: "spring", stiffness: 400 }}
-                            className="bg-white p-6 rounded-xl shadow-lg border-l-4 border-indigo-600 hover:bg-indigo-50 transition-colors cursor-pointer"
+                            className={`bg-white p-6 rounded-xl shadow-lg border-l-4 border-red-400 hover:shadow-xl transition-shadow cursor-pointer`}
                         >
                             <div className="flex items-center justify-between">
                                 <p className="text-sm font-medium text-gray-500">Objetivos Pendientes</p>
-                                <TrophyIcon className="w-7 h-7 text-indigo-600 bg-indigo-100 p-1 rounded-full" />
+                                <LightBulbIcon className={`w-7 h-7 ${OBJECTIVE_COLOR_CLASS} bg-red-100 p-1 rounded-full`} />
                             </div>
                             <p className="text-4xl font-extrabold text-gray-900 mt-2">{objectivesList.length}</p>
                         </motion.div>
@@ -376,7 +407,7 @@ export default function Dashboard() {
                         <MonthlyEvents events={eventsList} /> 
                     </div>
 
-                    {/* 5. SECCIÓN DE CUMPLEAÑOS */}
+                    {/* 5. SECCIÓN DE CUMPLEAÑOS (Icono y color ajustado) */}
                      <div className="mt-10 grid grid-cols-1 md:grid-cols-2 gap-8">
                         <motion.div
                             initial={{ opacity: 0, x: 50 }}
@@ -385,7 +416,8 @@ export default function Dashboard() {
                             className="bg-white p-6 rounded-xl shadow-md border border-gray-200 hover:shadow-lg transition-shadow" 
                         >
                             <div className="flex items-center space-x-3 text-pink-600 mb-4 border-b border-gray-100 pb-2">
-                                <CakeIcon className="w-6 h-6" />
+                                {/* ICONO AJUSTADO: Se usa GiftIcon para 'Cumpleaños' */}
+                                <GiftIcon className="w-6 h-6" />
                                 <h2 className="text-xl font-semibold text-gray-800">Cumpleaños (Próximos)</h2>
                             </div>
                             <ul className="space-y-3 pt-2">
@@ -393,7 +425,7 @@ export default function Dashboard() {
                                     birthdays.map((person, index) => (
                                         <li key={index} className="flex justify-between items-center text-gray-700 p-3 bg-pink-50 rounded-lg border-l-4 border-pink-300 hover:bg-pink-100 transition-colors">
                                             <span className="flex items-center text-pink-800">
-                                                <SparklesIcon className="w-4 h-4 mr-2 text-pink-500 flex-shrink-0"/>
+                                                <CakeIcon className="w-4 h-4 mr-2 text-pink-500 flex-shrink-0"/>
                                                 <span className="font-medium truncate">{person.name}</span>
                                             </span>
                                             <span className="font-semibold text-pink-700 text-sm flex-shrink-0 ml-2">{person.date}</span>

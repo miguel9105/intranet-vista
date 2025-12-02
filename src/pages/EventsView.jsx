@@ -104,95 +104,120 @@ export default function EventsView() {
         <AuthenticatedLayout title="Gestión de Eventos">
             <div className="p-6">
                 <h3 className="text-2xl font-light text-gray-800 border-b pb-2 mb-6">
-                    {editingId ? 'Editar Evento' : 'Crear Nuevo Evento'}
+                    {editingId ? '✍️ Editar Evento' : '✨ Crear Nuevo Evento'}
                 </h3>
                 
-                {error && <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">¡Error! {error}</div>}
+                {error && <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4 shadow-md">¡Error! {error}</div>}
 
-                {/* Formulario minimalista */}
-                <form onSubmit={handleSubmit} className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 mb-8 grid grid-cols-1 md:grid-cols-2 gap-4 border border-gray-100">
-                    <input 
-                        className="p-3 border border-gray-300 rounded focus:ring-1 focus:ring-opacity-50 col-span-1 md:col-span-2 focus:border-transparent transition" 
-                        name="title_event" // <-- CORREGIDO
-                        value={formData.title_event} 
-                        onChange={handleChange} 
-                        placeholder="Título del Evento" 
-                        required 
-                    />
-                    <textarea 
-                        className="p-3 border border-gray-300 rounded focus:ring-1 focus:ring-opacity-50 col-span-1 md:col-span-2 focus:border-transparent transition" 
-                        name="description_event" // <-- CORREGIDO
-                        value={formData.description_event} 
-                        onChange={handleChange} 
-                        placeholder="Descripción"
-                        rows="3"
-                    ></textarea>
-                    <label className="block col-span-1 md:col-span-2">
-                        <span className="text-gray-600 text-sm font-medium">Fecha y Hora del Evento:</span>
-                        <input 
-                            className="p-3 border border-gray-300 rounded w-full mt-1 focus:ring-1 focus:ring-opacity-50 focus:border-transparent transition" 
-                            type="datetime-local" 
-                            name="event_date" 
-                            value={formData.event_date} 
-                            onChange={handleChange} 
-                            required 
-                        />
-                    </label>
-                    <div className="col-span-1 md:col-span-2 flex gap-4 pt-2">
-                        <button 
-                            type="submit" 
-                            style={{ backgroundColor: PRIMARY_COLOR }} 
-                            className="text-white py-3 px-6 rounded-full font-semibold shadow-md hover:shadow-lg transition flex-grow"
-                        >
-                            {editingId ? 'Actualizar Evento' : 'Crear Evento'}
-                        </button>
+                {/* Formulario Estético y Moderno */}
+                <form 
+                    onSubmit={handleSubmit} 
+                    className="bg-white p-8 rounded-xl shadow-2xl hover:shadow-3xl transition-shadow duration-500 mb-10 border border-gray-50/50"
+                >
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {/* Campo Título */}
+                        <div className="md:col-span-1">
+                            <label htmlFor="title_event" className="block text-sm font-medium text-gray-700 mb-1">Título del Evento</label>
+                            <input 
+                                id="title_event"
+                                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition duration-300 placeholder-gray-400 shadow-sm" 
+                                name="title_event" // <-- CORREGIDO
+                                value={formData.title_event} 
+                                onChange={handleChange} 
+                                placeholder="Ej: Conferencia Anual de Tecnología" 
+                                required 
+                            />
+                        </div>
+                        
+                        {/* Campo Fecha y Hora */}
+                        <div className="md:col-span-1">
+                            <label htmlFor="event_date" className="block text-sm font-medium text-gray-700 mb-1">Fecha y Hora del Evento</label>
+                            <input 
+                                id="event_date"
+                                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition duration-300 shadow-sm" 
+                                type="datetime-local" 
+                                name="event_date" 
+                                value={formData.event_date} 
+                                onChange={handleChange} 
+                                required 
+                            />
+                        </div>
+                        
+                        {/* Campo Descripción (Ocupa ambas columnas) */}
+                        <div className="md:col-span-2">
+                            <label htmlFor="description_event" className="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
+                            <textarea 
+                                id="description_event"
+                                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition duration-300 placeholder-gray-400 shadow-sm" 
+                                name="description_event" // <-- CORREGIDO
+                                value={formData.description_event} 
+                                onChange={handleChange} 
+                                placeholder="Detalles importantes sobre el evento..."
+                                rows="4"
+                            ></textarea>
+                        </div>
+                    </div>
+                    
+                    {/* Botones de Acción */}
+                    <div className="flex gap-4 pt-6 justify-end">
                         {editingId && (
                             <button 
                                 type="button" 
                                 onClick={resetForm} 
-                                className="bg-gray-200 text-gray-700 py-3 px-6 rounded-full font-semibold hover:bg-gray-300 transition"
+                                className="bg-gray-200 text-gray-700 py-3 px-6 rounded-full font-semibold hover:bg-gray-300 transition duration-300 shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2"
                             >
-                                Cancelar
+                                ❌ Cancelar
                             </button>
                         )}
+                        <button 
+                            type="submit" 
+                            style={{ backgroundColor: PRIMARY_COLOR }} 
+                            className="text-white py-3 px-8 rounded-full font-bold shadow-xl hover:shadow-2xl transition duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                        >
+                            {editingId ? '💾 Actualizar Evento' : '🚀 Crear Evento'}
+                        </button>
                     </div>
                 </form>
 
+                <hr className="my-8 border-t border-gray-200" /> 
+                
                 {/* Lista de Eventos */}
                 <h3 className="text-2xl font-light text-gray-800 border-b pb-2 mb-6">
-                    Listado de Eventos
+                    🗓️ Listado de Eventos
                 </h3>
                 {loading ? (
-                    <p className="text-gray-500">Cargando eventos...</p>
+                    <p className="text-gray-500 py-10 text-center">Cargando eventos...</p>
                 ) : (
-                    <div className="bg-white p-6 rounded-lg shadow-md border border-gray-100 overflow-x-auto">
+                    <div className="bg-white p-6 rounded-xl shadow-xl border border-gray-100 overflow-x-auto">
                          <table className="min-w-full divide-y divide-gray-200">
                             <thead style={{ backgroundColor: PRIMARY_COLOR, color: 'white' }}>
                                 <tr>
-                                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider rounded-tl-lg">Título</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider rounded-tl-xl">Título</th>
                                     <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Fecha y Hora</th>
                                     <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Descripción</th>
-                                    <th className="px-6 py-3 text-center rounded-tr-lg">Acciones</th>
+                                    <th className="px-6 py-3 text-center rounded-tr-xl">Acciones</th>
                                 </tr>
                             </thead>
                             <tbody className="bg-white divide-y divide-gray-100">
                                 {events.map((event) => (
-                                    <tr key={event.id} className="hover:bg-gray-50 transition">
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{event.title_event}</td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{new Date(event.event_date).toLocaleString()}</td>
-                                        <td className="px-6 py-4 text-sm text-gray-500">{event.description_event.substring(0, 50)}...</td>
+                                    <tr key={event.id} className="hover:bg-indigo-50/30 transition">
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">{event.title_event}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{new Date(event.event_date).toLocaleString()}</td>
+                                        <td className="px-6 py-4 text-sm text-gray-500 max-w-xs truncate">{event.description_event.substring(0, 50)}{event.description_event.length > 50 ? '...' : ''}</td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-center">
                                             <button 
                                                 onClick={() => handleEdit(event)} 
-                                                className="text-blue-700 hover:text-blue-900 mr-3 font-medium"
+                                                className="text-indigo-600 hover:text-indigo-800 mr-3 font-medium transition duration-150"
+                                                title="Editar Evento"
                                             >
-                                                Editar
+                                                ✏️ Editar
                                             </button>
                                             <button 
                                                 onClick={() => handleDelete(event.id)} 
-                                                className="text-red-600 hover:text-red-800 font-medium"
+                                                className="text-red-600 hover:text-red-800 font-medium transition duration-150"
+                                                title="Eliminar Evento"
                                             >
-                                                Eliminar
+                                                🗑️ Eliminar
                                             </button>
                                         </td>
                                     </tr>
