@@ -18,6 +18,7 @@ import EventsView from './pages/EventsView';
 import NewsView from './pages/NewsView';        
 import DatacreditoProcessingPage from './pages/analisis_datos/DatacreditoProcessingPage';
 import CostCenterPage from './pages/CostCenterPage';
+import Herramientas from './pages/Herramientas';
 
 // IMPORTANTE: Estos componentes usan llaves { } porque se exportan como const, no default
 import { InventorySsoButton } from './components/sso/InventorySsoButton'; 
@@ -35,6 +36,8 @@ function App() {
           {/* Rutas Protegidas por Login */}
           <Route element={<ProtectedRoute />}>
               <Route path="/dashboard" element={<Dashboard />} />
+              {/* NUEVA RUTA DE HERRAMIENTAS */}
+              <Route path="/herramientas" element={<Herramientas />} />
               
               {/* Rutas Protegidas por Permisos Técnicos */}
               <Route path="/users" element={
@@ -56,10 +59,10 @@ function App() {
                 <PermissionGuard permission="view_cost_centers"><CostCenterPage /></PermissionGuard>
               } />
 
-              <Route path="/analisis-datos" element={
+              <Route path="/analisis_datos/DatacreditoProcessingPage" element={
                 <PermissionGuard permission="view_datacredito"><DatacreditoProcessingPage /></PermissionGuard>
               } />
-              <Route path="/documentos" element={
+              <Route path="/analisis_datos/Documents" element={
                 <PermissionGuard permission="view_documents"><Documents /></PermissionGuard>
               } />
               

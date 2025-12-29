@@ -132,7 +132,7 @@ export default function Dashboard() {
                             
                             <div className="space-y-4">
                                 {/* Botón Monitor Estratégico */}
-                                <button onClick={() => navigate('/analisis-datos/documentos')} className={actionButtonStyle}>
+                                <button onClick={() => navigate('/analisis_datos/Documents')} className={actionButtonStyle}>
                                     <div className="flex items-center gap-4">
                                         <div className="bg-white/10 p-2 rounded-lg"><ChartBarIcon className="w-6 h-6 text-white group-hover:scale-110 transition-transform" /></div>
                                         <span className="font-bold text-lg">Cartera</span>
@@ -141,7 +141,7 @@ export default function Dashboard() {
                                 </button>
 
                                 {/* Botón Carga Datacrédito */}
-                                <button onClick={() => navigate('/analisis-datos/datacredito')} className={actionButtonStyle}>
+                                <button onClick={() => navigate('/analisis_datos/DatacreditoProcessingPage')} className={actionButtonStyle}>
                                     <div className="flex items-center gap-4">
                                         <div className="bg-white/10 p-2 rounded-lg"><DocumentTextIcon className="w-6 h-6 text-white group-hover:scale-110 transition-transform" /></div>
                                         <span className="font-bold text-lg">Carga Datacrédito</span>
