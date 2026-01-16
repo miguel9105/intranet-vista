@@ -27,21 +27,15 @@ export default function Dashboard() {
     const navigate = useNavigate();
     const IMAGE_BASE_URL = getBaseUrl(apiClient);
     const [newsList, setNewsList] = useState([]);
-    const [objectivesList, setObjectivesList] = useState([]);
-    const [eventsList, setEventsList] = useState([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const fetchDashboardData = async () => {
             try {
-                const [news, obj, ev] = await Promise.all([
+                const [news] = await Promise.all([
                     apiClient.get('/news'),
-                    apiClient.get('/objectives'),
-                    apiClient.get('/events'),
                 ]);
                 setNewsList(news.data || []);
-                setObjectivesList(obj.data?.slice(0, 5) || []);
-                setEventsList(ev.data?.slice(0, 5) || []);
             } catch (error) {
                 console.error(error);
             } finally {
@@ -119,53 +113,8 @@ export default function Dashboard() {
                         </motion.div>
                     </div>
 
-                    
-
-                    
-
-                    {/* SECCIÓN: OBJETIVOS Y EVENTOS */}
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
-                        {/* Lista de Objetivos */}
-                        <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
-                            <h3 className="text-xl font-bold text-gray-800 mb-6 flex items-center gap-3">
-                                <LightBulbIcon className="w-7 h-7 text-yellow-500" /> Objetivos del Periodo
-                            </h3>
-                            <div className="space-y-4">
-                                {objectivesList.length > 0 ? objectivesList.map((obj) => (
-                                    <div key={obj.id} className="p-5 border border-gray-100 bg-gray-50/50 rounded-2xl hover:bg-white hover:shadow-md transition-all border-l-4 border-l-blue-900">
-                                        <h4 className="font-bold text-gray-800">{obj.title}</h4>
-                                        <p className="text-sm text-gray-500 mt-1">{obj.description}</p>
-                                    </div>
-                                )) : <p className="text-gray-400 italic">No hay objetivos registrados.</p>}
-                            </div>
-                        </motion.div>
-
-                        {/* Lista de Eventos */}
-                        <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
-                            <h3 className="text-xl font-bold text-gray-800 mb-6 flex items-center gap-3">
-                                <CalendarDaysIcon className="w-7 h-7 text-blue-600" /> Próximos Eventos
-                            </h3>
-                            <div className="space-y-4">
-                                {eventsList.length > 0 ? eventsList.map((ev) => (
-                                    <div key={ev.id} className="flex items-center gap-5 p-4 border border-gray-50 bg-gray-50/50 rounded-2xl">
-                                        <div className="bg-blue-900 text-white p-3 rounded-xl font-bold text-center min-w-[70px] shadow-sm">
-                                            <span className="block text-[10px] uppercase opacity-80">Evento</span>
-                                            <span className="text-lg"># {ev.id}</span>
-                                        </div>
-                                        <div>
-                                            <h4 className="font-bold text-gray-800">{ev.title}</h4>
-                                            <p className="text-xs text-blue-600 font-semibold">{ev.date || 'Pendiente de fecha'}</p>
-                                        </div>
-                                    </div>
-                                )) : <p className="text-gray-400 italic">Sin eventos próximos.</p>}
-                            </div>
-                        </motion.div>
-                    </div>
                 </div>
             </div>
         </AuthenticatedLayout>
     );
 }
-
-
-
