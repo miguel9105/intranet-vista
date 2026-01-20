@@ -128,7 +128,7 @@ const Herramientas = () => {
                         
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                             {canViewCartera && (
-                                <div onClick={() => handleAction('/analisis_datos/Documents', "Abriendo Cartera")} className={cardBaseStyle}>
+                                <div onClick={() => handleAction('/analisis_datos/Documents')} className={cardBaseStyle}>
                                     <div className="flex justify-between items-start">
                                         <div className="p-4 bg-blue-50 text-[rgb(5,25,49)] rounded-2xl group-hover:bg-[rgb(5,25,49)] group-hover:text-white transition-all duration-500 shadow-sm">
                                             <FileText size={32} />
@@ -149,7 +149,7 @@ const Herramientas = () => {
                             )}
 
                             {canViewDatacredito && (
-                                <div onClick={() => handleAction('/analisis_datos/DatacreditoProcessingPage', "Cargando Datacrédito")} className={cardBaseStyle}>
+                                <div onClick={() => handleAction('/analisis_datos/DatacreditoProcessingPage')} className={cardBaseStyle}>
                                     <div className="flex justify-between items-start">
                                         <div className="p-4 bg-blue-50 text-[rgb(5,25,49)] rounded-2xl group-hover:bg-[rgb(5,25,49)] group-hover:text-white transition-all duration-500 shadow-sm">
                                             <Database size={32} />
@@ -182,13 +182,13 @@ const Herramientas = () => {
                         
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                             {canViewInventory && (
-                                <div onClick={() => handleAction(null, "Redirigiendo a Inventarios...", true)} className="transform transition-all duration-300 hover:scale-[1.03] active:scale-[0.98]">
+                                <div onClick={() => handleAction(null, true)} className="transform transition-all duration-300 hover:scale-[1.03] active:scale-[0.98]">
                                     <InventorySsoButton className="w-full flex items-center justify-between p-8 rounded-3xl bg-[rgb(5,25,49)] text-white shadow-xl hover:bg-[#0a2240] transition-colors group" />
                                 </div>
                             )}
 
                             {canViewHelp && (
-                                <div onClick={() => handleAction(null, "Conectando con Soporte...", true)} className="transform transition-all duration-300 hover:scale-[1.03] active:scale-[0.98]">
+                                <div onClick={() => handleAction(null, "", true)} className="transform transition-all duration-300 hover:scale-[1.03] active:scale-[0.98]">
                                     <HelpSsoButton className="w-full flex items-center justify-between p-8 rounded-3xl bg-white border-2 border-[rgb(5,25,49)] text-[rgb(5,25,49)] font-black hover:bg-gray-50 transition-colors shadow-lg shadow-gray-200 group" />
                                 </div>
                             )}

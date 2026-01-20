@@ -6,7 +6,7 @@ export const PermissionGuard = ({ children, permission }) => {
     
     // Si el usuario es ADMINISTRADOR, pasa siempre.
     const isAdmin = user?.roles?.some(role => 
-        (typeof role === 'string' ? role : role.name).toUpperCase() === 'ADMINISTRADOR'
+        (typeof role === 'string' ? role : role.name).toUpperCase() === 'Super_usuario'
     );
 
     const hasPermission = user?.permissions?.includes(permission);

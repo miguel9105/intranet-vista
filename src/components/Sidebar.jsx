@@ -18,7 +18,7 @@ const canAccess = (user, permissionName) => {
     const userRoleNames = Array.isArray(user.roles) 
         ? user.roles.map(r => typeof r === 'string' ? r : r.name)
         : [];
-    if (userRoleNames.includes('Administrador')) return true;
+    if (userRoleNames.includes('Super usuario')) return true;
     if (user.permissions && Array.isArray(user.permissions)) {
         return user.permissions.includes(permissionName);
     }
@@ -99,11 +99,6 @@ export default function Sidebar() {
         canAccess(user, 'view_documents') || 
         canAccess(user, 'view_help_desk');
 
-    const publishSubItems = [
-        canAccess(user, 'view_objectives') && { label: 'Objetivos', to: '/objectives' },
-        canAccess(user, 'view_events') && { label: 'Eventos', to: '/events' },
-        canAccess(user, 'view_news') && { label: 'Noticias', to: '/news' },
-    ].filter(Boolean);
 
     // LISTA COMPLETA DE CONFIGURACIÓN
     const configSubItems = [
@@ -127,7 +122,7 @@ export default function Sidebar() {
 
             <nav className="flex-grow space-y-2 overflow-y-auto p-3">
                 {canAccess(user, 'view_dashboard') && (
-                    <NavItem to="/dashboard" icon={HomeIcon} isCollapsed={isCollapsed}>Dashboard</NavItem>
+                    <NavItem to="/dashboard" icon={HomeIcon} isCollapsed={isCollapsed}>Home</NavItem>
                 )}
 
                 {hasToolsAccess && (
@@ -136,9 +131,6 @@ export default function Sidebar() {
                     </NavItem>
                 )}
 
-                {publishSubItems.length > 0 && (
-                    <NavItem to="/publicar" icon={PencilSquareIcon} isCollapsed={isCollapsed} subItems={publishSubItems}>Publicar</NavItem>
-                )}
             </nav>
 
             <div className="mt-auto p-3 border-t border-gray-200">

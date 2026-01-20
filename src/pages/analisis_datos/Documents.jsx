@@ -126,10 +126,8 @@ const ChartCard = ({ title, children, action }) => (
 
 /**
  * SUNBURST INTERACTIVO (DRILLDOWN)
- * Muestra doble anillo por defecto. Al hacer click en el anillo interior, hace zoom a los hijos.
  */
 const InteractiveSunburst = ({ data, activeSelection, onSelect }) => {
-    // 1. Si hay una selección activa, mostramos SOLO la dona de detalle (Hijos)
     if (activeSelection) {
         const detailData = activeSelection.children || [];
         return (
@@ -165,8 +163,6 @@ const InteractiveSunburst = ({ data, activeSelection, onSelect }) => {
         );
     }
 
-    // 2. Si NO hay selección, mostramos el Sunburst (Doble Anillo)
-    // Preparamos datos externos planos
     const outerData = [];
     data.forEach(parent => {
         if (parent.children && parent.children.length > 0) {
@@ -179,7 +175,6 @@ const InteractiveSunburst = ({ data, activeSelection, onSelect }) => {
     return (
         <ResponsiveContainer width="100%" height="100%">
             <PieChart>
-                {/* Anillo Interno: Padres (Clickable) */}
                 <Pie 
                     data={data} 
                     dataKey="value" 
@@ -199,7 +194,6 @@ const InteractiveSunburst = ({ data, activeSelection, onSelect }) => {
                     )}/>
                 </Pie>
 
-                {/* Anillo Externo: Hijos (Visual) */}
                 <Pie 
                     data={outerData} 
                     dataKey="value" 
@@ -241,15 +235,40 @@ const DonutWithTotal = ({ data, total }) => (
     </ResponsiveContainer>
 );
 
+/**
+ * STACKED BAR MODIFICADO PARA EJES VISIBLES
+ */
 const StackedBar = ({ data, keys, isCurrency }) => (
     <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={data} margin={{ left: -10 }}>
+        <BarChart data={data} margin={{ left: -10, bottom: 45, right: 10 }}>
             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-            <XAxis dataKey="name" tick={{fontSize: 9, fontWeight: 800, fill: '#94a3b8'}} axisLine={false} tickLine={false} />
-            <YAxis tick={{fontSize: 9, fill: '#94a3b8'}} axisLine={false} tickLine={false} tickFormatter={(v) => isCurrency ? `$${(v/1000000).toFixed(0)}M` : v.toLocaleString()} />
+            <XAxis 
+                dataKey="name" 
+                tick={{fontSize: 8, fontWeight: 800, fill: '#94a3b8'}} 
+                axisLine={false} 
+                tickLine={false} 
+                interval={0} // Muestra todas las etiquetas
+                angle={-45} // Inclina para evitar superposición
+                textAnchor="end" // Alineación correcta
+                height={70} // Espacio para las etiquetas inclinadas
+            />
+            <YAxis 
+                tick={{fontSize: 9, fill: '#94a3b8'}} 
+                axisLine={false} 
+                tickLine={false} 
+                tickFormatter={(v) => isCurrency ? `$${(v/1000000).toFixed(0)}M` : v.toLocaleString()} 
+            />
             <Tooltip content={<CustomTooltip />} />
             <Legend verticalAlign="top" align="right" iconType="circle" wrapperStyle={{fontSize: '9px', fontWeight: '800', paddingBottom: '20px'}} />
-            {keys.map((k, i) => <Bar key={k} dataKey={k} stackId="a" fill={COLOR_MAP[k.toUpperCase()] || DEFAULT_COLORS[i % DEFAULT_COLORS.length]} barSize={35} />)}
+            {keys.map((k, i) => (
+                <Bar 
+                    key={k} 
+                    dataKey={k} 
+                    stackId="a" 
+                    fill={COLOR_MAP[k.toUpperCase()] || DEFAULT_COLORS[i % DEFAULT_COLORS.length]} 
+                    barSize={30} 
+                />
+            ))}
         </BarChart>
     </ResponsiveContainer>
 );
@@ -408,18 +427,15 @@ export default function Documents() {
     const [moduleData, setModuleData] = useState({ cartera: null, seguimientos: null });
     const [notification, setNotification] = useState(null);
 
-    // ESTADOS DE SELECCIÓN PARA DRILLDOWN (Uno por cada gráfica interactiva)
     const [selVigencia, setSelVigencia] = useState(null);
     const [selGestion, setSelGestion] = useState(null);
     const [selConPago, setSelConPago] = useState(null);
     const [selSinPago, setSelSinPago] = useState(null);
 
-    // Estados Filtros Globales
     const [selectedFilters, setSelectedFilters] = useState({
         Empresa: [], CALL_CENTER_FILTRO: [], Zona: [], Regional_Cobro: [], Franja_Cartera: []
     });
 
-    // Estados Filtros Locales y Tablas
     const [localFiltersGestion, setLocalFiltersGestion] = useState({ estado_pago: [], estado_gestion: [], cargos: [] });
     const [localFiltersRodamiento, setLocalFiltersRodamiento] = useState({ rodamiento: [] });
     const [showLocalFiltersGestion, setShowLocalFiltersGestion] = useState(true);
@@ -435,7 +451,6 @@ export default function Documents() {
         else setVisible([...currentVisible, key]);
     };
 
-    // Funciones de Fetching (Mantenidas)
     const fetchTableData = useCallback(async (source, page = 1, search = '', filters = {}, setter) => {
         if (!selectedJobId) return;
         setter(prev => ({ ...prev, loading: true, search: search }));
@@ -539,7 +554,7 @@ export default function Documents() {
                 map[xVal][sKey] = (map[xVal][sKey] || 0) + val;
                 keysSet.add(sKey);
             });
-            return { data: Object.values(map).sort((a,b) => a.name - b.name), keys: Array.from(keysSet) };
+            return { data: Object.values(map).sort((a,b) => String(a.name).localeCompare(String(b.name))), keys: Array.from(keysSet) };
         };
 
         const buildDrilldown = (list, mainKey, subKey, valKey) => {
@@ -583,7 +598,6 @@ export default function Documents() {
         }
     }, [moduleData, activeTab, selectedFilters]);
 
-    // Helpers para botón de Volver
     const BackBtn = ({ onClick }) => (
         <button onClick={onClick} className="flex items-center gap-1 text-indigo-600 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-full text-[9px] font-black transition-all">
             <ArrowLeftCircle size={12} /> VOLVER
@@ -623,7 +637,6 @@ export default function Documents() {
                 </header>
 
                 <div className="flex flex-row flex-1 relative">
-                    {/* SIDEBAR */}
                     <FilterSidebar 
                         options={filterOptions} 
                         selectedFilters={selectedFilters} 
@@ -631,7 +644,6 @@ export default function Documents() {
                         onClear={() => setSelectedFilters({ Empresa: [], CALL_CENTER_FILTRO: [], Zona: [], Regional_Cobro: [], Franja_Cartera: [] })}
                     />
 
-                    {/* DASHBOARD PRINCIPAL */}
                     <main className="flex-1 p-8 min-w-0 overflow-x-hidden">
                         {loading ? (
                             <div className="h-96 flex flex-col items-center justify-center bg-white rounded-[3rem] shadow-sm italic text-[10px] font-black text-slate-400 uppercase tracking-widest">
@@ -644,8 +656,6 @@ export default function Documents() {
                                         <ChartCard title="Distribución Regional"><StackedBar data={charts.regional.data} keys={charts.regional.keys} /></ChartCard>
                                         <ChartCard title="Distribución de Cobro"><StackedBar data={charts.cobro.data} keys={charts.cobro.keys} /></ChartCard>
                                         <ChartCard title="Evolución Desembolsos"><StackedBar data={charts.desembolsos.data} keys={charts.desembolsos.keys} isCurrency/></ChartCard>
-                                        
-                                        {/* GRÁFICA VIGENCIA (DRILLDOWN) */}
                                         <ChartCard 
                                             title={selVigencia ? `Detalle: ${selVigencia.name}` : "Distribución Vigencia (Multinivel)"} 
                                             action={selVigencia && <BackBtn onClick={() => setSelVigencia(null)} />}
@@ -659,8 +669,6 @@ export default function Documents() {
                                             <ChartCard title="Recaudo General">
                                                 <DonutWithTotal data={charts.recaudo} total={charts.recaudo?.reduce((a,b)=>a+b.value,0)} />
                                             </ChartCard>
-                                            
-                                            {/* GRÁFICA GESTIÓN (DRILLDOWN) */}
                                             <ChartCard 
                                                 title={selGestion ? `Detalle: ${selGestion.name}` : "Gestión General (Multinivel)"} 
                                                 action={selGestion && <BackBtn onClick={() => setSelGestion(null)} />}
@@ -669,24 +677,14 @@ export default function Documents() {
                                             </ChartCard>
                                         </div>
                                         <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
-                                            {/* GRÁFICA CON PAGO (DRILLDOWN) */}
-                                            <ChartCard 
-                                                title={selConPago ? `Detalle: ${selConPago.name}` : "Crédito Con Pago (Multinivel)"} 
-                                                action={selConPago && <BackBtn onClick={() => setSelConPago(null)} />}
-                                            >
+                                            <ChartCard title="Crédito Con Pago (Multinivel)" action={selConPago && <BackBtn onClick={() => setSelConPago(null)} />}>
                                                 <InteractiveSunburst data={charts.conPago} activeSelection={selConPago} onSelect={setSelConPago} />
                                             </ChartCard>
-                                            
-                                            {/* GRÁFICA SIN PAGO (DRILLDOWN) */}
-                                            <ChartCard 
-                                                title={selSinPago ? `Detalle: ${selSinPago.name}` : "Crédito Sin Pago (Multinivel)"} 
-                                                action={selSinPago && <BackBtn onClick={() => setSelSinPago(null)} />}
-                                            >
+                                            <ChartCard title="Crédito Sin Pago (Multinivel)" action={selSinPago && <BackBtn onClick={() => setSelSinPago(null)} />}>
                                                 <InteractiveSunburst data={charts.sinPago} activeSelection={selSinPago} onSelect={setSelSinPago} />
                                             </ChartCard>
                                         </div>
 
-                                        {/* SECCIÓN TABLAS Y FILTROS */}
                                         <div className="space-y-2">
                                             <LocalFilterSection 
                                                 title="Filtros de Búsqueda (Gestión)"
@@ -703,7 +701,6 @@ export default function Documents() {
                                             <TableToolbar 
                                                 onSearch={(val) => fetchTableData('seguimientos_gestion', 1, val, localFiltersGestion, setGestionTable)}
                                                 searchValue={gestionTable.search}
-                                                placeholder="Buscar en Gestión (Cédula, Cliente, Gestor)..."
                                                 allColumns={ALL_COLUMNS_GESTION}
                                                 visibleColumns={visibleColsGestion}
                                                 onToggleColumn={(key) => toggleColumn(key, setVisibleColsGestion, visibleColsGestion)}
@@ -732,7 +729,6 @@ export default function Documents() {
                                             <TableToolbar 
                                                 onSearch={(val) => fetchTableData('seguimientos_rodamientos', 1, val, localFiltersRodamiento, setRodamientoTable)}
                                                 searchValue={rodamientoTable.search}
-                                                placeholder="Buscar en Rodamientos (Crédito, Cédula, Franja)..."
                                                 allColumns={ALL_COLUMNS_RODAMIENTO}
                                                 visibleColumns={visibleColsRodamiento}
                                                 onToggleColumn={(key) => toggleColumn(key, setVisibleColsRodamiento, visibleColsRodamiento)}
