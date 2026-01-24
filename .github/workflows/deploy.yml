@@ -1,0 +1,35 @@
+name: Deploy Frontend to AWS
+on:
+  push:
+    branches:
+      - master
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 1. Descargar codigo de Git
+        uses: actions/checkout@v4
+      - name: 2. Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+      - name: 3. Instalar dependencias
+        run: npm install
+      - name: 4. Compilar proyecto (Build)
+        run: npm run build
+        env:
+          # Aquí le decimos a React la URL de la API
+          VITE_API_URL: "https://intranet.electrocreditosdelcauca.com/api"
+      - name: 5. Configurar credenciales de AWS
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+      - name: 6. Subir archivos a S3
+        run: aws s3 sync dist/ s3://intranet-electrocreditos-frontend --delete
+      - name: 7. Limpiar cache de CloudFront (Invalidation)
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id ${{ secrets.CLOUDFRONT_ID }} \
+            --paths "/*"
