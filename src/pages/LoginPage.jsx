@@ -44,7 +44,7 @@ export default function LoginPage() {
         }
     };
 
-    const logoUrl = '../public/images/logos/logo.png';
+    const logoUrl = '/images/logos/logo.png';
 
     const alertConfig = {
         email: {

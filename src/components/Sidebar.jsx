@@ -117,7 +117,7 @@ export default function Sidebar() {
             onMouseLeave={() => setIsCollapsed(true)}
         >
             <div className="p-6 flex justify-center border-b border-gray-100">
-                <img src="../public/images/logos/logo.png" alt="Logo" className={`object-contain transition-all duration-300 ${isCollapsed ? 'w-10 h-10' : 'w-60 h-25'}`} />
+                <img src="/images/logos/logo.png" alt="Logo" className={`object-contain transition-all duration-300 ${isCollapsed ? 'w-10 h-10' : 'w-60 h-25'}`} />
             </div>
 
             <nav className="flex-grow space-y-2 overflow-y-auto p-3">
