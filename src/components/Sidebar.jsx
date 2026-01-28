@@ -18,7 +18,7 @@ const canAccess = (user, permissionName) => {
     const userRoleNames = Array.isArray(user.roles) 
         ? user.roles.map(r => typeof r === 'string' ? r : r.name)
         : [];
-    if (userRoleNames.includes('Super usuario')) return true;
+    if (userRoleNames.includes('Super_usuario')) return true;
     if (user.permissions && Array.isArray(user.permissions)) {
         return user.permissions.includes(permissionName);
     }
@@ -112,7 +112,7 @@ export default function Sidebar() {
 
     return (
         <aside 
-            className={`fixed top-0 left-0 h-full bg-white border-r border-gray-200 transition-all duration-300 z-30 flex flex-col ${isCollapsed ? 'w-20' : 'w-64'}`}
+            className={`fixed top-0 left-0 h-full bg-white border-r border-gray-200 transition-all duration-300 z-60 flex flex-col ${isCollapsed ? 'w-20' : 'w-64'}`}
             onMouseEnter={() => setIsCollapsed(false)}
             onMouseLeave={() => setIsCollapsed(true)}
         >
