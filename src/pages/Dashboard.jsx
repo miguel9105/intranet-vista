@@ -4,8 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import AuthenticatedLayout from '../layouts/AuthenticatedLayout';
 import { useAuth } from '../context/AuthContext'; 
 import { 
-    ChevronRightIcon, ChartBarIcon, DocumentTextIcon,
-    ArrowTopRightOnSquareIcon // Importado para los accesos externos
+    ChevronRightIcon, ChartBarIcon, DocumentTextIcon
 } from '@heroicons/react/24/outline'; 
 import { motion } from 'framer-motion'; 
 
@@ -15,8 +14,6 @@ import { HelpSsoButton } from "../components/sso/HelpSsoButton";
 
 const PRIMARY_COLOR_CLASS = 'text-[rgb(5,25,49)]'; 
 const BG_PRIMARY_DARK = 'bg-[rgb(5,25,49)]';
-
-const getBaseUrl = (apiClient) => apiClient.defaults.baseURL ? apiClient.defaults.baseURL.replace('/api', '') : (import.meta.env.VITE_API_URL || 'http://localhost:8000/api').replace('/api', '');
 
 export default function Dashboard() {
     const { apiClient, user } = useAuth();
@@ -28,7 +25,7 @@ export default function Dashboard() {
             try {
                 await apiClient.get('/news');
             } catch (error) {
-                console.error(error);
+                console.error("Error al cargar dashboard:", error);
             } finally {
                 setLoading(false);
             }
@@ -36,15 +33,20 @@ export default function Dashboard() {
         fetchDashboardData();
     }, [apiClient]);
 
-    if (loading) return <div className="h-screen flex items-center justify-center font-bold text-blue-900 italic">Cargando dashboard empresarial...</div>;
+    if (loading) return (
+        <div className="h-screen flex items-center justify-center font-bold text-blue-900 italic">
+            Cargando dashboard empresarial...
+        </div>
+    );
+
+    // Estilo base para todos los botones de acción
+    const actionButtonStyle = `w-full h-[72px] flex items-center justify-between px-6 ${BG_PRIMARY_DARK} hover:bg-opacity-90 text-white rounded-2xl transition-all shadow-md group border border-transparent`;
 
     /**
-     * MEJORA DE ESTILOS:
-     * 1. h-[72px]: Altura fija para que todos midan lo mismo.
-     * 2. text-base o text-lg: Tamaño de letra consistente.
-     * 3. items-center: Alineación vertical perfecta.
+     * FUNCIÓN DE VALIDACIÓN:
+     * Verifica si el permiso existe dentro del array de permisos del usuario.
      */
-    const actionButtonStyle = `w-full h-[72px] flex items-center justify-between px-6 ${BG_PRIMARY_DARK} hover:bg-opacity-90 text-white rounded-2xl transition-all shadow-md group border border-transparent`;
+    const canView = (permission) => user?.permissions?.includes(permission);
 
     return (
         <AuthenticatedLayout title="Panel de Control">
@@ -78,40 +80,57 @@ export default function Dashboard() {
                             </h3>
                             
                             <div className="flex flex-col gap-4">
-                                {/* Cartera */}
-                                <button onClick={() => navigate('/analisis_datos/Documents')} className={actionButtonStyle}>
-                                    <div className="flex items-center gap-4">
-                                        <div className="bg-white/10 p-2 rounded-xl">
-                                            <ChartBarIcon className="w-6 h-6 text-white" />
+                                
+                                {/* BOTÓN CARTERA - Ahora condicional */}
+                                {canView('view_documents') && (
+                                    <button 
+                                        onClick={() => navigate('/analisis_datos/Documents')} 
+                                        className={actionButtonStyle}
+                                    >
+                                        <div className="flex items-center gap-4">
+                                            <div className="bg-white/10 p-2 rounded-xl">
+                                                <ChartBarIcon className="w-6 h-6 text-white" />
+                                            </div>
+                                            <span className="font-bold text-lg tracking-tight">Gestion cartera</span>
                                         </div>
-                                        <span className="font-bold text-lg tracking-tight">Cartera</span>
-                                    </div>
-                                    <ChevronRightIcon className="w-5 h-5 text-white/50 group-hover:text-white transition-colors" />
-                                </button>
+                                        <ChevronRightIcon className="w-5 h-5 text-white/50 group-hover:text-white transition-colors" />
+                                    </button>
+                                )}
 
-                                {/* Carga Datacrédito */}
-                                <button onClick={() => navigate('/analisis_datos/DatacreditoProcessingPage')} className={actionButtonStyle}>
-                                    <div className="flex items-center gap-4">
-                                        <div className="bg-white/10 p-2 rounded-xl">
-                                            <DocumentTextIcon className="w-6 h-6 text-white" />
+                                {/* BOTÓN CARGA DATACRÉDITO - Condicional */}
+                                {canView('view_datacredito') && (
+                                    <button 
+                                        onClick={() => navigate('/analisis_datos/DatacreditoProcessingPage')} 
+                                        className={actionButtonStyle}
+                                    >
+                                        <div className="flex items-center gap-4">
+                                            <div className="bg-white/10 p-2 rounded-xl">
+                                                <DocumentTextIcon className="w-6 h-6 text-white" />
+                                            </div>
+                                            <span className="font-bold text-lg tracking-tight">Carga datacrédito</span>
                                         </div>
-                                        <span className="font-bold text-lg tracking-tight">Carga datacrédito</span>
-                                    </div>
-                                    <ChevronRightIcon className="w-5 h-5 text-white/50 group-hover:text-white transition-colors" />
-                                </button>
+                                        <ChevronRightIcon className="w-5 h-5 text-white/50 group-hover:text-white transition-colors" />
+                                    </button>
+                                )}
 
-                                {/* SSO Buttons */}
-                                {user?.permissions?.includes('view_inventory') && (
+                                {/* BOTONES SSO CONDICIONALES */}
+                                {canView('view_inventory') && (
                                     <InventorySsoButton className={actionButtonStyle} />
                                 )}
                                 
-                                {user?.permissions?.includes('view_help_desk') && (
+                                {canView('view_help_desk') && (
                                     <HelpSsoButton className={actionButtonStyle} />
+                                )}
+
+                                {/* Mensaje si no tiene ningún permiso asignado */}
+                                {user?.permissions?.length === 0 && (
+                                    <p className="text-sm text-gray-400 italic text-center py-4">
+                                        No tienes módulos habilitados.
+                                    </p>
                                 )}
                             </div>
                         </motion.div>
                     </div>
-
                 </div>
             </div>
         </AuthenticatedLayout>
