@@ -5,7 +5,7 @@ import AuthenticatedLayout from '../layouts/AuthenticatedLayout';
 import { useAuth } from '../context/AuthContext'; 
 import { 
     ChevronRightIcon, ChartBarIcon, DocumentTextIcon,
-    ArrowTopRightOnSquareIcon // Importado para los accesos externos
+    ArrowTopRightOnSquareIcon 
 } from '@heroicons/react/24/outline'; 
 import { motion } from 'framer-motion'; 
 
@@ -38,12 +38,6 @@ export default function Dashboard() {
 
     if (loading) return <div className="h-screen flex items-center justify-center font-bold text-blue-900 italic">Cargando dashboard empresarial...</div>;
 
-    /**
-     * MEJORA DE ESTILOS:
-     * 1. h-[72px]: Altura fija para que todos midan lo mismo.
-     * 2. text-base o text-lg: Tamaño de letra consistente.
-     * 3. items-center: Alineación vertical perfecta.
-     */
     const actionButtonStyle = `w-full h-[72px] flex items-center justify-between px-6 ${BG_PRIMARY_DARK} hover:bg-opacity-90 text-white rounded-2xl transition-all shadow-md group border border-transparent`;
 
     return (
@@ -78,27 +72,31 @@ export default function Dashboard() {
                             </h3>
                             
                             <div className="flex flex-col gap-4">
-                                {/* Cartera */}
-                                <button onClick={() => navigate('/analisis_datos/Documents')} className={actionButtonStyle}>
-                                    <div className="flex items-center gap-4">
-                                        <div className="bg-white/10 p-2 rounded-xl">
-                                            <ChartBarIcon className="w-6 h-6 text-white" />
+                                {/* Gestión Cartera - Validado con permisos */}
+                                {user?.permissions?.includes('view_documents') && (
+                                    <button onClick={() => navigate('/analisis_datos/Documents')} className={actionButtonStyle}>
+                                        <div className="flex items-center gap-4">
+                                            <div className="bg-white/10 p-2 rounded-xl">
+                                                <ChartBarIcon className="w-6 h-6 text-white" />
+                                            </div>
+                                            <span className="font-bold text-lg tracking-tight"> Gestión Cartera</span>
                                         </div>
-                                        <span className="font-bold text-lg tracking-tight">Cartera</span>
-                                    </div>
-                                    <ChevronRightIcon className="w-5 h-5 text-white/50 group-hover:text-white transition-colors" />
-                                </button>
+                                        <ChevronRightIcon className="w-5 h-5 text-white/50 group-hover:text-white transition-colors" />
+                                    </button>
+                                )}
 
-                                {/* Carga Datacrédito */}
-                                <button onClick={() => navigate('/analisis_datos/DatacreditoProcessingPage')} className={actionButtonStyle}>
-                                    <div className="flex items-center gap-4">
-                                        <div className="bg-white/10 p-2 rounded-xl">
-                                            <DocumentTextIcon className="w-6 h-6 text-white" />
+                                {/* Carga Datacrédito - Validado con permisos */}
+                                {user?.permissions?.includes('view_datacredito') && (
+                                    <button onClick={() => navigate('/analisis_datos/DatacreditoProcessingPage')} className={actionButtonStyle}>
+                                        <div className="flex items-center gap-4">
+                                            <div className="bg-white/10 p-2 rounded-xl">
+                                                <DocumentTextIcon className="w-6 h-6 text-white" />
+                                            </div>
+                                            <span className="font-bold text-lg tracking-tight">Carga datacrédito</span>
                                         </div>
-                                        <span className="font-bold text-lg tracking-tight">Carga datacrédito</span>
-                                    </div>
-                                    <ChevronRightIcon className="w-5 h-5 text-white/50 group-hover:text-white transition-colors" />
-                                </button>
+                                        <ChevronRightIcon className="w-5 h-5 text-white/50 group-hover:text-white transition-colors" />
+                                    </button>
+                                )}
 
                                 {/* SSO Buttons */}
                                 {user?.permissions?.includes('view_inventory') && (

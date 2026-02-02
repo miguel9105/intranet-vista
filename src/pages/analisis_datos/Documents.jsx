@@ -1,13 +1,16 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import AuthenticatedLayout from '../../layouts/AuthenticatedLayout';
 import { useAuth } from '../../context/AuthContext';
-import { RefreshCw, CheckCircle2, Activity, UploadCloud, AlertTriangle, X, Filter as FilterIcon } from 'lucide-react'; // Cambiado Menu por FilterIcon
+import { RefreshCw, CheckCircle2, Activity, AlertTriangle, X, Filter as FilterIcon } from 'lucide-react';
 
-// Importamos los componentes modularizados
+// Importamos los componentes locales
 import { FilterSidebar } from './DashboardComponents';
 import Cartera from './Cartera';
 import Seguirientos from './Seguimientos';
 import Resultados from './Resultados';
+
+// Importación del botón (Asegúrate que esta ruta sea correcta según tu estructura)
+import FileUploadButton from '../../components/FileUploadButton'; 
 
 export default function Documents() {
     const { apiClient, permissions = [], user } = useAuth();
@@ -15,7 +18,6 @@ export default function Documents() {
 
     const [activeTab, setActiveTab] = useState('cartera'); 
     const [loading, setLoading] = useState(false);
-    const [isUploading, setIsUploading] = useState(false);
     const [selectedJobId, setSelectedJobId] = useState(null);
     
     const [moduleData, setModuleData] = useState({ 
@@ -35,8 +37,6 @@ export default function Documents() {
         Franja_Cartera: [] 
     });
     
-    const fileInputRef = useRef(null);
-
     useEffect(() => {
         apiClient.get('/reportes/activo').then(({ data }) => {
             const id = data?.active_job_id || data?.job_id;
@@ -69,25 +69,18 @@ export default function Documents() {
         }
     }, [selectedJobId, apiClient]);
 
-    const handleFileUpload = async (event) => {
-        const file = event.target.files[0];
-        if (!file) return;
-        setIsUploading(true);
-        try {
-            const { data: signRes } = await apiClient.post('/reportes/generar-url', { filename: file.name, content_type: file.type });
-            const xhr = new XMLHttpRequest();
-            xhr.open('PUT', signRes.upload_url);
-            xhr.setRequestHeader('Content-Type', file.type);
-            xhr.onload = async () => {
-                if (xhr.status === 200) {
-                    const { data: procRes } = await apiClient.post('/reportes/iniciar-procesamiento', { file_key: signRes.file_key, empresa: 'FINANSUENOS' });
-                    setSelectedJobId(procRes.job_id);
-                    setNotification({ type: 'success', message: 'Reporte procesando...' });
-                    setIsUploading(false);
-                }
-            };
-            xhr.send(file);
-        } catch (error) { setIsUploading(false); setNotification({ type: 'error', message: 'Error al subir' }); }
+    // Callbacks del botón de carga
+    const handleUploadStart = () => {
+         setNotification({ type: 'success', message: 'Iniciando carga...' });
+    };
+
+    const handleUploadSuccess = (jobId) => {
+        setSelectedJobId(jobId);
+        setNotification({ type: 'success', message: 'Reporte procesando correctamente' });
+    };
+
+    const handleUploadError = (errorMessage) => {
+        setNotification({ type: 'error', message: errorMessage });
     };
 
     const filterOptions = useMemo(() => {
@@ -118,6 +111,7 @@ export default function Documents() {
     return (
         <AuthenticatedLayout title="Panel cartera">
             <div className="min-h-screen bg-slate-50 flex flex-col">
+                {/* Notificaciones */}
                 {notification && (
                     <div className="fixed top-6 right-6 z-50 flex items-center gap-3 bg-white border p-4 rounded-2xl shadow-xl">
                         {notification.type === 'success' ? <CheckCircle2 className="text-emerald-500" size={20} /> : <AlertTriangle className="text-red-500" size={20} />}
@@ -126,9 +120,9 @@ export default function Documents() {
                     </div>
                 )}
                 
+                {/* Header Restaurado */}
                 <header className="bg-white px-4 md:px-8 py-4 border-b border-slate-100 flex justify-between items-center sticky top-0 z-40 h-auto md:h-20 gap-4">
                     <div className="flex items-center gap-3">
-                        {/* BOTÓN CAMBIADO: Ahora muestra un ícono de FILTRO en lugar de hamburguesa */}
                         <button 
                             onClick={() => setIsSidebarOpen(true)} 
                             className="md:hidden p-2.5 bg-indigo-50 rounded-xl text-indigo-600 border border-indigo-100 shadow-sm active:scale-95 transition-transform"
@@ -140,7 +134,7 @@ export default function Documents() {
                         <div>
                             <h1 className="text-sm font-black uppercase text-slate-800 tracking-tighter leading-none">Gestion Cartera</h1>
                             {selectedJobId && (
-                                <span className="text-[9px] font-bold text-indigo-500 bg-indigo-50 px-2 py-0.5 rounded mt-1 inline-block">
+                                <span className="text-[10px] font-bold bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded mt-1 inline-block border border-indigo-100">
                                     JOB: #{selectedJobId}
                                 </span>
                             )}
@@ -158,13 +152,25 @@ export default function Documents() {
 
                         {userPermissions.includes('general_report') && (
                             <>
-                                <input type="file" ref={fileInputRef} onChange={handleFileUpload} className="hidden" />
-                                <button onClick={() => fileInputRef.current.click()} disabled={isUploading} className="hidden md:flex bg-indigo-600 text-white px-6 py-2.5 rounded-xl text-[10px] font-black items-center gap-2 hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100 whitespace-nowrap">
-                                    {isUploading ? <RefreshCw className="animate-spin" size={14}/> : <UploadCloud size={14}/>} {isUploading ? 'SUBIENDO...' : 'CARGAR BASE'}
-                                </button>
-                                <button onClick={() => fileInputRef.current.click()} disabled={isUploading} className="md:hidden p-2 bg-indigo-600 text-white rounded-xl">
-                                    <UploadCloud size={18}/>
-                                </button>
+                                <div className="hidden md:block">
+                                    <FileUploadButton 
+                                        apiClient={apiClient}
+                                        onUploadStart={handleUploadStart}
+                                        onUploadSuccess={handleUploadSuccess}
+                                        onUploadError={handleUploadError}
+                                    />
+                                </div>
+
+                                <div className="md:hidden">
+                                    <FileUploadButton 
+                                        apiClient={apiClient}
+                                        onUploadStart={handleUploadStart}
+                                        onUploadSuccess={handleUploadSuccess}
+                                        onUploadError={handleUploadError}
+                                        iconOnly={true}
+                                        className="bg-indigo-600 text-white p-2 rounded-xl"
+                                    />
+                                </div>
                             </>
                         )}
                     </div>
